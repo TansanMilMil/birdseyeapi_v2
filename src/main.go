@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/api"
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/api"
+	db "github.com/birdseyeapi/birdseyeapi_v2/src/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +29,7 @@ func main() {
 	})
 
 	// Initialize database
-	db, err := models.InitDB()
+	db, err := db.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

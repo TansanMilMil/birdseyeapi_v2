@@ -1,6 +1,7 @@
-package models
+package db
 
 import (
+	"birdseyeapi_v2/src/models"
 	"fmt"
 	"os"
 
@@ -29,9 +30,8 @@ func InitDB() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// Auto-migrate the database schema
-	err = db.AutoMigrate(&News{}, &NewsReaction{})
+	err = db.AutoMigrate(&models.News{}, &models.NewsReaction{})
 	if err != nil {
 		return nil, err
 	}
