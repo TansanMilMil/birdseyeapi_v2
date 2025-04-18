@@ -1,7 +1,7 @@
 package scraping
 
 import (
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 )
 
 // ScrapingNews defines the interface for news scrapers

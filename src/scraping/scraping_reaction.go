@@ -1,7 +1,7 @@
 package scraping
 
 import (
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 )
 
 // ScrapingReaction defines the interface for reaction scrapers

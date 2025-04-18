@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 )
 
 // ScrapeNewsByHatena implements scraping for Hatena

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 )
 
 // SiteScraping handles news scraping from various websites

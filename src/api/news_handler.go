@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/models"
-	"github.com/birdseyeapi/birdseyeapi_v2/internal/scraping"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

@@ -1,9 +1,10 @@
 package db
 
 import (
-	"birdseyeapi_v2/src/models"
 	"fmt"
 	"os"
+
+	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
