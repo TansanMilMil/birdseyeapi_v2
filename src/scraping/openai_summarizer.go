@@ -12,6 +12,7 @@ import (
 type OpenAISummarizer struct {
 	apiKey  string
 	baseURL string
+	openAIModel string
 }
 
 // OpenAIRequest represents a request to the OpenAI API
@@ -40,15 +41,13 @@ type OpenAIResponse struct {
 // NewOpenAISummarizer creates a new OpenAISummarizer
 func NewOpenAISummarizer() *OpenAISummarizer {
 	apiKey := os.Getenv("OPENAI_API_KEY")
-	baseURL := os.Getenv("OPENAI_API_BASE_URL")
-	
-	if baseURL == "" {
-		baseURL = "https://api.openai.com/v1/chat/completions"
-	}
+	baseURL := os.Getenv("OPENAI_CHAT_ENDPOINT")
+	openAIModel := os.Getenv("OPENAI_MODEL")
 	
 	return &OpenAISummarizer{
 		apiKey:  apiKey,
 		baseURL: baseURL,
+		openAIModel: openAIModel,
 	}
 }
 
@@ -61,19 +60,16 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 
 	// Prepare request body
 	reqBody := OpenAIRequest{
-		Model: "gpt-3.5-turbo",
+		Model: s.openAIModel,
 		Messages: []Message{
 			{
-				Role:    "system",
-				Content: "You are a helpful assistant that summarizes news articles. Keep your summaries concise but informative.",
-			},
-			{
 				Role:    "user",
-				Content: fmt.Sprintf("Please summarize the following news article: \n\n%s", text),
+				Content: fmt.Sprintf(`次の文章を日本語で要約してください。
+                    なお、要約結果の文章は200文字以内に収まるように調整してください。
+                    ---
+                    %s`, text),
 			},
 		},
-		MaxTokens:   150,
-		Temperature: 0.7,
 	}
 	
 	jsonData, err := json.Marshal(reqBody)

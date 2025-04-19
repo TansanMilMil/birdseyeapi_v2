@@ -22,6 +22,7 @@ services:
       - BIRDSEYEAPI_EXECUTION_MODE
       - OPENAI_CHAT_ENDPOINT=https://api.openai.com/v1/chat/completions
       - OPENAI_API_KEY
+      - OPENAI_MODEL
       - MYSQL_ROOT_PASSWORD
     entrypoint: ./go-entrypoint.sh
   nginx:

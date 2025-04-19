@@ -15,7 +15,7 @@ func InitDB() (*gorm.DB, error) {
 	// Get database connection parameters from environment variables
 	// or use default values if not provided
 	username := "root"
-	password := getEnv("MYSQL_ROOT_PASSWORD", "error")
+	password := os.Getenv("MYSQL_ROOT_PASSWORD")
 	host := "mysql"
 	port := "3306"
 	dbname := "birds_eye"
@@ -38,13 +38,4 @@ func InitDB() (*gorm.DB, error) {
 	}
 
 	return db, nil
-}
-
-// getEnv gets an environment variable value or returns a default value
-func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	return value
 }
