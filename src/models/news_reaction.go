@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// NewsReaction represents a reaction to a news article
 type NewsReaction struct {
 	gorm.Model
 	ID           uint      `gorm:"primarykey"`

@@ -10,28 +10,23 @@ import (
 	"gorm.io/gorm"
 )
 
-// InitDB initializes the database connection
 func InitDB() (*gorm.DB, error) {
-	// Get database connection parameters from environment variables
-	// or use default values if not provided
 	username := "root"
 	password := os.Getenv("MYSQL_ROOT_PASSWORD")
 	host := "mysql"
 	port := "3306"
 	dbname := "birds_eye"
 
-	// Create the database connection string
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC",
 		username, password, host, port, dbname,
 	)
 
-	// Connect to the database
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	// Auto-migrate the database schema
+
 	err = db.AutoMigrate(&models.News{}, &models.NewsReaction{})
 	if err != nil {
 		return nil, err

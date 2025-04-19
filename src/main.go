@@ -13,7 +13,6 @@ const (
 )
 
 func main() {
-	// Set up Gin
 	r := gin.Default()
 	
 	r.Use(func(c *gin.Context) {

@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// News represents a news article
 type News struct {
 	gorm.Model
 	ID              uint      `gorm:"primarykey"`
@@ -22,13 +21,11 @@ type News struct {
 	Reactions       []NewsReaction `gorm:"foreignKey:NewsID" json:"reactions"`
 }
 
-// NewsWithReactionCount represents a news article with reaction count
 type NewsWithReactionCount struct {
 	News
 	ReactionCount int `json:"reactionCount"`
 }
 
-// NewsSummarizeRequest represents a request to summarize a news article
 type NewsSummarizeRequest struct {
 	URL string `json:"url"`
 }
