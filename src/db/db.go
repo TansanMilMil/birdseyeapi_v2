@@ -14,11 +14,11 @@ import (
 func InitDB() (*gorm.DB, error) {
 	// Get database connection parameters from environment variables
 	// or use default values if not provided
-	username := getEnv("DB_USER", "root")
-	password := getEnv("DB_PASSWORD", "root1603")
-	host := getEnv("DB_HOST", "mysql")
-	port := getEnv("DB_PORT", "3306")
-	dbname := getEnv("DB_NAME", "birdseyeapi")
+	username := "root"
+	password := getEnv("MYSQL_ROOT_PASSWORD", "error")
+	host := "mysql"
+	port := "3306"
+	dbname := "birds_eye"
 
 	// Create the database connection string
 	dsn := fmt.Sprintf(
