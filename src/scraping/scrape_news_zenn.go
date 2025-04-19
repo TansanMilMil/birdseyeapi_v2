@@ -9,6 +9,13 @@ import (
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 )
 
+const (
+    SourceName = "Zenn"
+    BaseURL    = "https://zenn.dev"
+    ArticleSelector = "#tech-trend > div > div > div > article > div > a[class^=\"ArticleList_link\"]"
+    MaxArticles = 15
+)
+
 type ScrapeNewsByZenn struct {
 	summarizer Summarizer
 }
@@ -20,24 +27,26 @@ func NewScrapeNewsByZenn(summarizer Summarizer) *ScrapeNewsByZenn {
 }
 
 func (s *ScrapeNewsByZenn) GetSourceBy() string {
-	return "Zenn"
+	return SourceName
 }
 
 func (s *ScrapeNewsByZenn) ExtractNews() ([]models.News, error) {
 	var news []models.News
 	summarizer := s.summarizer
 
-	url := "https://zenn.dev"
+	url := BaseURL
 	doc, err := GetWebDoc(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
 
-	articles := doc.Find("#tech-trend > div > div > div > article > div > a[class^=\"ArticleList_link\"]")
+	articles := doc.Find(ArticleSelector)
+	articles = articles.Slice(0, MaxArticles)
+	
 	articles.Each(func(i int, art *goquery.Selection) {
 		title := strings.TrimSpace(art.Find("h2").Text())
 		art_url := url + strings.TrimSpace(art.AttrOr("href", ""))
-          
+		  
 		newsItem := models.News{
 			Title:           title,
 			Description:     "",
@@ -56,7 +65,9 @@ func (s *ScrapeNewsByZenn) ExtractNews() ([]models.News, error) {
 
 		if summarizer != nil {
 			summary, err := summarizer.Summarize(art_doc.Text())
-			if err == nil {
+			if err != nil {
+				fmt.Printf("Failed to summarize article: %v\n", err)
+			} else {
 				newsItem.SummarizedText = summary
 			}
 		}
