@@ -73,6 +73,8 @@ func (s *ScrapeNewsByZenn) ExtractNews() ([]models.News, error) {
 		}
 
 		news = append(news, newsItem)
+		// 改行なしで"."を標準出力する
+		fmt.Print(".")
 	})
 
 	return news, nil

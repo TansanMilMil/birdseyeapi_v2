@@ -2,18 +2,20 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/birdseyeapi/birdseyeapi_v2/src/api"
 	db "github.com/birdseyeapi/birdseyeapi_v2/src/db"
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	Port = "8080"
+)
+
 func main() {
 	// Set up Gin
 	r := gin.Default()
 	
-	// Configure CORS
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -28,24 +30,15 @@ func main() {
 		c.Next()
 	})
 
-	// Initialize database
 	db, err := db.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Register API routes
 	api.RegisterRoutes(r, db)
 
-	// Get port from environment or use default
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	// Start the server
-	log.Printf("Server starting on port %s", port)
-	if err := r.Run(":" + port); err != nil {
+	log.Printf("Server starting on port %s", Port)
+	if err := r.Run(":" + Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

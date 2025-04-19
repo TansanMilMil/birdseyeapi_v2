@@ -38,13 +38,14 @@ func (s *SiteScraping) ScrapeNews() ([]models.News, error) {
 
 	// Scrape news from each source
 	for _, scraper := range s.scrapers {
+		fmt.Print(scraper.GetSourceBy() + ": scraping")
 		news, err := scraper.ExtractNews()
 		if err != nil {
-			fmt.Printf("Error scraping from %s: %v\n", scraper.GetSourceBy(), err)
+			fmt.Printf(" -> Error scraping from %s: %v\n", scraper.GetSourceBy(), err)
 			continue // Continue with the next source even if one fails
 		}
 		
-		fmt.Printf("%s -> scraped article: %d\n", scraper.GetSourceBy(), len(news))
+		fmt.Printf(" -> scraped article: %d\n", scraper.GetSourceBy(), len(news))
 		allNews = append(allNews, news...)
 	}
 
