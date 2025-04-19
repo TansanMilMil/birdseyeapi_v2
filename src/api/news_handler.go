@@ -69,23 +69,33 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 
 // ScrapeNews triggers scraping of news articles
 func (h *NewsHandler) ScrapeNews(c *gin.Context) {
+	// Create a new site scraper
 	siteScraper := scraping.NewSiteScraping()
 	
-	// Scrape news articles
-	news, err := siteScraper.ScrapeNews()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	// Start the scraping process in a goroutine to avoid timeout
+	go func() {
+		// Scrape news articles in the background
+		news, err := siteScraper.ScrapeNews()
+		if err != nil {
+			// Just log the error since we can't return it to the client anymore
+			// In a production app, you might want to use a proper logging system
+			// or error tracking service here
+			println("Error scraping news:", err.Error())
+			return
+		}
 
-	// Save news articles to the database
-	for i := range news {
-		h.db.Create(&news[i])
-	}
+		// Save news articles to the database
+		for i := range news {
+			h.db.Create(&news[i])
+		}
+		
+		println("News scraping completed successfully, articles saved:", len(news))
+	}()
 
+	// Return an immediate response to the client
 	c.JSON(http.StatusOK, gin.H{
-		"message": "News articles scraped successfully",
-		"count":   len(news),
+		"success": true,
+		"message": "News scraping has been started in the background",
 	})
 }
 
