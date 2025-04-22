@@ -24,6 +24,7 @@ services:
       - OPENAI_API_KEY
       - OPENAI_MODEL
       - MYSQL_ROOT_PASSWORD
+      - SCRAPING_ARTICLES
     entrypoint: ./go-entrypoint.sh
   nginx:
     image: nginx:1.27.5

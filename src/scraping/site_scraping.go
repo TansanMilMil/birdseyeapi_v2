@@ -42,7 +42,7 @@ func (s *SiteScraping) ScrapeNews() ([]models.News, error) {
 			continue
 		}
 
-		fmt.Printf(" -> scraped article: %d\n", scraper.GetSourceBy(), len(news))
+		fmt.Printf(" -> scraped article: %s: %d\n", scraper.GetSourceBy(), len(news))
 		allNews = append(allNews, news...)
 	}
 
@@ -64,6 +64,7 @@ func (s *SiteScraping) ScrapeReactions(news models.News) ([]models.NewsReaction,
 			continue
 		}
 
+		fmt.Printf(" -> scraped reactions: %s: %d\n", scraper.GetSourceBy(), len(reactions))
 		allReactions = append(allReactions, reactions...)
 	}
 

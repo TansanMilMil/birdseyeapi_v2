@@ -7,6 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/doc"
 )
@@ -15,8 +16,9 @@ const (
 	ZDNetSourceName      = "ZDNet Japan"
 	ZDNetBaseURL         = "https://japan.zdnet.com/topics/"
 	ZDNetArticleSelector = "div.article-item"
-	ZDNetMaxArticles     = 15
 )
+
+var ZDNetMaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 15)
 
 type ScrapeNewsByZDNet struct {
 	summarizer ai.Summarizer

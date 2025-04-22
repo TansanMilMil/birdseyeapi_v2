@@ -7,6 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/doc"
 )
@@ -15,8 +16,9 @@ const (
 	CloudWatchSourceName      = "CloudWatch by Impress"
 	CloudWatchBaseURL         = "https://cloud.watch.impress.co.jp/"
 	CloudWatchArticleSelector = "li.item.news"
-	CloudWatchMaxArticles     = 5
 )
+
+var CloudWatchMaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 5)
 
 type ScrapeNewsByCloudWatchImpress struct {
 	summarizer ai.Summarizer

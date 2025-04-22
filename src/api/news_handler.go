@@ -74,6 +74,11 @@ func (h *NewsHandler) ScrapeNews(c *gin.Context) {
 		}
 
 		for i := range news {
+			reactions, err := siteScraper.ScrapeReactions(news[i])
+			if err != nil {
+				println("Error scraping reactions:", err.Error())
+			}
+			news[i].Reactions = reactions
 			h.db.Create(&news[i])
 		}
 
