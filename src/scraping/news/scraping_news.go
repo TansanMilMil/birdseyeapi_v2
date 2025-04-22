@@ -1,4 +1,4 @@
-package scraping
+package news
 
 import (
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"

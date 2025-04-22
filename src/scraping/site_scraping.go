@@ -4,26 +4,29 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/news"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/reaction"
 )
 
 type SiteScraping struct {
-	scrapers      []ScrapingNews
-	reactionScrapers []ScrapingReaction
+	scrapers         []news.ScrapingNews
+	reactionScrapers []reaction.ScrapingReaction
 }
 
 func NewSiteScraping() *SiteScraping {
-	summarizer := NewOpenAISummarizer()
+	summarizer := ai.NewOpenAISummarizer()
 
 	return &SiteScraping{
-		scrapers: []ScrapingNews{
-			NewScrapeNewsByCloudWatchImpress(summarizer),
-			NewScrapeNewsByHatena(summarizer),
-			NewScrapeNewsByZenn(summarizer),
-			NewScrapeNewsByZDNet(summarizer),
+		scrapers: []news.ScrapingNews{
+			news.NewScrapeNewsByCloudWatchImpress(summarizer),
+			news.NewScrapeNewsByHatena(summarizer),
+			news.NewScrapeNewsByZenn(summarizer),
+			news.NewScrapeNewsByZDNet(summarizer),
 		},
-		reactionScrapers: []ScrapingReaction{
-			NewScrapeReactionsByHatena(),
+		reactionScrapers: []reaction.ScrapingReaction{
+			reaction.NewScrapeReactionsByHatena(),
 		},
 	}
 }
@@ -38,7 +41,7 @@ func (s *SiteScraping) ScrapeNews() ([]models.News, error) {
 			fmt.Printf(" -> Error scraping from %s: %v\n", scraper.GetSourceBy(), err)
 			continue
 		}
-		
+
 		fmt.Printf(" -> scraped article: %d\n", scraper.GetSourceBy(), len(news))
 		allNews = append(allNews, news...)
 	}
@@ -60,7 +63,7 @@ func (s *SiteScraping) ScrapeReactions(news models.News) ([]models.NewsReaction,
 			fmt.Printf("Error scraping reactions from %s: %v\n", scraper.GetSourceBy(), err)
 			continue
 		}
-		
+
 		allReactions = append(allReactions, reactions...)
 	}
 

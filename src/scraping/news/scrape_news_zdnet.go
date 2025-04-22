@@ -1,4 +1,4 @@
-package scraping
+package news
 
 import (
 	"fmt"
@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/doc"
 )
 
 const (
@@ -17,10 +19,10 @@ const (
 )
 
 type ScrapeNewsByZDNet struct {
-	summarizer Summarizer
+	summarizer ai.Summarizer
 }
 
-func NewScrapeNewsByZDNet(summarizer Summarizer) *ScrapeNewsByZDNet {
+func NewScrapeNewsByZDNet(summarizer ai.Summarizer) *ScrapeNewsByZDNet {
 	return &ScrapeNewsByZDNet{
 		summarizer: summarizer,
 	}
@@ -34,12 +36,12 @@ func (s *ScrapeNewsByZDNet) ExtractNews() ([]models.News, error) {
 	var news []models.News
 	summarizer := s.summarizer
 
-	doc, err := GetWebDoc(ZDNetBaseURL)
+	d, err := doc.GetWebDoc(ZDNetBaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
 
-	articles := doc.Find(ZDNetArticleSelector)
+	articles := d.Find(ZDNetArticleSelector)
 	articles = articles.Slice(0, ZDNetMaxArticles)
 
 	articles.Each(func(i int, selection *goquery.Selection) {

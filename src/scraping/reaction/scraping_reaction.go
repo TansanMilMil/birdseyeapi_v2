@@ -1,4 +1,4 @@
-package scraping
+package reaction
 
 import (
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"

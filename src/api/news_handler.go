@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping"
 	"github.com/gin-gonic/gin"
@@ -64,7 +65,7 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 
 func (h *NewsHandler) ScrapeNews(c *gin.Context) {
 	siteScraper := scraping.NewSiteScraping()
-	
+
 	go func() {
 		news, err := siteScraper.ScrapeNews()
 		if err != nil {
@@ -75,7 +76,7 @@ func (h *NewsHandler) ScrapeNews(c *gin.Context) {
 		for i := range news {
 			h.db.Create(&news[i])
 		}
-		
+
 		println("News scraping completed successfully, articles saved:", len(news))
 	}()
 
@@ -99,7 +100,7 @@ func (h *NewsHandler) SummarizeNews(c *gin.Context) {
 		return
 	}
 
-	summarizer := scraping.NewOpenAISummarizer()
+	summarizer := ai.NewOpenAISummarizer()
 	summarizedText, err := summarizer.Summarize(news.Description)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

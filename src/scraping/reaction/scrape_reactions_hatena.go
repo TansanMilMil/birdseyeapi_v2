@@ -1,4 +1,4 @@
-package scraping
+package reaction
 
 import (
 	"fmt"
