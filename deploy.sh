@@ -2,13 +2,13 @@
 
 cd `dirname $0`
 
-SERVE=false
+NO_SERVE=false
 INIT_DB=false
 
 for ARG in "$@"; do
     case "$ARG" in
-        --serve)
-            SERVE=true
+        --no-serve)
+            NO_SERVE=true
             ;;
         --init-db)
             INIT_DB=true
@@ -26,6 +26,7 @@ fi
 VENUS_TARGET_DIR=$VENUS_HOME/birdseyeapi_v2
 
 echo "build ----------------------------"
+docker compose down
 docker compose -f ./docker-compose.ci.yml up -d go
 docker compose exec go ./build.sh --no-docker-compose
 tar cvfz ./go/dist.tgz ./go/dist/
@@ -50,7 +51,7 @@ ssh $VENUS_SSH_HOST ls -alh $VENUS_TARGET_DIR
 echo "stop birdseyeapi ----------------------------"
 ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml down
 
-if $SERVE; then
+if [ "$NO_SERVE" = "false" ]; then
     echo "start birdseyeapi ----------------------------"
     ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml up -d
 fi
@@ -66,6 +67,13 @@ fi
 
 echo ""
 echo "current docker containers"
+echo "Waiting for 10 seconds to get the latest status..."
+sleep 10
 ssh $VENUS_SSH_HOST docker ps
 
 echo "deploy finished!! ----------------------------"
+
+echo "curl health check ----------------------------"
+echo "Waiting for 20 seconds to get the latest status..."
+sleep 20
+./check-remote-curl.sh
