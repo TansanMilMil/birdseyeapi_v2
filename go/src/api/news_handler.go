@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

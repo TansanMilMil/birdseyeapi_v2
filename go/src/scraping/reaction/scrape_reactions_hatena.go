@@ -3,13 +3,12 @@ package reaction
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 )
 
 type ScrapeReactionsByHatena struct{}
@@ -25,8 +24,10 @@ func (s *ScrapeReactionsByHatena) GetSourceBy() string {
 func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]models.NewsReaction, error) {
 	var reactions []models.NewsReaction
 
-	encodedURL := url.QueryEscape(articleURL)
-	hatenaURL := "https://b.hatena.ne.jp/entry/json/" + encodedURL
+	// remove http:// or https:// from the URL
+	encodedURL := strings.TrimPrefix(articleURL, "http://")
+	encodedURL = strings.TrimPrefix(encodedURL, "https://")
+	hatenaURL := "https://b.hatena.ne.jp/entry/s/" + encodedURL
 
 	resp, err := http.Get(hatenaURL)
 	if err != nil {

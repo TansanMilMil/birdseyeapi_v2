@@ -2,11 +2,19 @@
 
 setup() {
     cd `dirname $0`
-    docker compose up -d
 }
 
 setup
+BASE_DIR="go"
+BIN_PATH="$BASE_DIR/dist/birdseyeapi_v2"
+GO_FILE="$BASE_DIR/src/main.go"
 
-docker compose exec go go build -o dist/birdseyeapi_v2 src/main.go
-echo 'binary built! -> dist/birdseyeapi_v2'
+if [ ! -z "${1:-}" ] && [ "$1" == "--no-docker-compose" ]; then
+    COMMAND_PREFIX="No docker compose exec go..."
+    go build -o $BIN_PATH $GO_FILE
+else
+    docker compose up -d
+    docker compose exec go go build -o $BIN_PATH $GO_FILE
+fi
 
+echo "binary built! -> $BIN_PATH"

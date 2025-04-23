@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/src/api"
-	db "github.com/birdseyeapi/birdseyeapi_v2/src/db"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/api"
+	db "github.com/birdseyeapi/birdseyeapi_v2/go/src/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +14,7 @@ const (
 
 func main() {
 	r := gin.Default()
-	
+
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")

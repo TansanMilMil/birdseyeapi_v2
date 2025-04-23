@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

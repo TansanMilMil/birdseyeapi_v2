@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/env"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/doc"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping/doc"
 )
 
 const (

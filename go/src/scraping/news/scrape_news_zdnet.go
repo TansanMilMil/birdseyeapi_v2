@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/env"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/models"
-	"github.com/birdseyeapi/birdseyeapi_v2/src/scraping/doc"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping/doc"
 )
 
 const (
 	ZDNetSourceName      = "ZDNet Japan"
-	ZDNetBaseURL         = "https://japan.zdnet.com/topics/"
-	ZDNetArticleSelector = "div.article-item"
+	ZDNetBaseURL         = "https://japan.zdnet.com"
+	ZDNetArticleSelector = "#page-wrap > div.pg-container-main > main > section:nth-child(1) > div > ul > li"
 )
 
 var ZDNetMaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 15)
@@ -48,11 +48,11 @@ func (s *ScrapeNewsByZDNet) ExtractNews() ([]models.News, error) {
 
 	articles.Each(func(i int, selection *goquery.Selection) {
 		articleURL := ""
-		titleElement := selection.Find("h3.title a")
+		titleElement := selection.Find("a > div.txt > p.txt-ttl")
 		if href, exists := titleElement.Attr("href"); exists {
 			articleURL = href
 			if !strings.HasPrefix(articleURL, "http") {
-				articleURL = "https://japan.zdnet.com" + articleURL
+				articleURL = ZDNetBaseURL + articleURL
 			}
 		}
 
@@ -61,7 +61,7 @@ func (s *ScrapeNewsByZDNet) ExtractNews() ([]models.News, error) {
 		description := strings.TrimSpace(selection.Find("p.abstract").Text())
 
 		imageURL := ""
-		if src, exists := selection.Find("div.image img").Attr("src"); exists {
+		if src, exists := selection.Find("a > div.thumb > img").Attr("src"); exists {
 			imageURL = src
 		}
 
