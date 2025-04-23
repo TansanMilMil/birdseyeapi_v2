@@ -40,7 +40,7 @@ Thumbs.db
 # Build directory
 /build/
 /bin/
-/dist/
+*/dist/
 
 # Log files
 *.log
@@ -55,3 +55,5 @@ docker-compose.override.yml
 
 # Binary files
 /cmd/server/server
+
+*.tgz

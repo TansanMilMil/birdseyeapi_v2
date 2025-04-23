@@ -29,7 +29,9 @@ scp ./go-entrypoint.sh $VENUS_SSH_HOST:$VENUS_TARGET_DIR/go-entrypoint.sh
 scp ./init_db.sh $VENUS_SSH_HOST:$VENUS_TARGET_DIR/init_db.sh
 scp -r ./nginx $VENUS_SSH_HOST:$VENUS_TARGET_DIR/
 scp -r ./mysql $VENUS_SSH_HOST:$VENUS_TARGET_DIR/
-ssh $VENUS_SSH_HOST ls -a $VENUS_TARGET_DIR
+echo ""
+echo "current files in $VENUS_SSH_HOST:$VENUS_TARGET_DIR"
+ssh $VENUS_SSH_HOST ls -alh $VENUS_TARGET_DIR
 
 echo "stop birdseyeapi ----------------------------"
 ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml down
@@ -44,5 +46,9 @@ if [ ! -z "${1:-}" ] && [ "$1" == "--init-db" ]; then
     ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml up -d
     ssh $VENUS_SSH_HOST ./init_db.sh
 fi
+
+echo ""
+echo "current docker containers"
+ssh $VENUS_SSH_HOST docker ps
 
 echo "deploy finished!! ----------------------------"

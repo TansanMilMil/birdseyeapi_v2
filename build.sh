@@ -6,8 +6,11 @@ setup() {
 
 setup
 BASE_DIR="go"
-BIN_PATH="$BASE_DIR/dist/birdseyeapi_v2"
+DIST_DIR="$BASE_DIR/dist"
+BIN_PATH="$DIST_DIR/birdseyeapi_v2"
 GO_FILE="$BASE_DIR/src/main.go"
+
+mkdir -p $DIST_DIR
 
 if [ ! -z "${1:-}" ] && [ "$1" == "--no-docker-compose" ]; then
     COMMAND_PREFIX="No docker compose exec go..."
