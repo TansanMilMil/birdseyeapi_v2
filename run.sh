@@ -1,14 +1,20 @@
 #!/bin/bash -eu
 
-setup() {
-    cd `dirname $0`
-}
-
-setup
+cd `dirname $0`
 BASE_DIR="go"
 GO_FILE="$BASE_DIR/src/main.go"
 
-if [ ! -z "${1:-}" ] && [ "$1" == "--no-docker-compose" ]; then
+NO_DOCKER_COMPOSE=false
+
+for ARG in "$@"; do
+    case "$ARG" in
+        --no-docker-compose)
+            NO_DOCKER_COMPOSE=true
+            ;;
+    esac
+done
+
+if $NO_DOCKER_COMPOSE; then
     COMMAND_PREFIX="No docker compose exec go..."
     go run $GO_FILE
 else

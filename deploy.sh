@@ -2,6 +2,20 @@
 
 cd `dirname $0`
 
+SERVE=false
+INIT_DB=false
+
+for ARG in "$@"; do
+    case "$ARG" in
+        --serve)
+            SERVE=true
+            ;;
+        --init-db)
+            INIT_DB=true
+            ;;
+    esac
+done
+
 echo "load .env ----------------------------"
 if [ ! -f .env ]; then
     echo ".env file not found!"
@@ -36,15 +50,18 @@ ssh $VENUS_SSH_HOST ls -alh $VENUS_TARGET_DIR
 echo "stop birdseyeapi ----------------------------"
 ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml down
 
-if [ ! -z "${1:-}" ] && [ "$1" == "--serve" ]; then
+if $SERVE; then
     echo "start birdseyeapi ----------------------------"
     ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml up -d
 fi
 
-if [ ! -z "${1:-}" ] && [ "$1" == "--init-db" ]; then
+if $INIT_DB; then
     echo "init db ----------------------------"
     ssh $VENUS_SSH_HOST docker compose -f $VENUS_TARGET_DIR/docker-compose.yml up -d
-    ssh $VENUS_SSH_HOST ./init_db.sh
+    # MySQLが起動するまでウェイトする
+    echo "Waiting for MySQL to start..."
+    sleep 5
+    ssh $VENUS_SSH_HOST $VENUS_TARGET_DIR/init_db.sh
 fi
 
 echo ""
