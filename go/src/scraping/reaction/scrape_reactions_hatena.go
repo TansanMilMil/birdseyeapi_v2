@@ -8,10 +8,10 @@ import (
 
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
-	"github.com/sclevine/agouti"
+	"github.com/tebeka/selenium"
 )
 
-const SOURCE_URL = "https://b.hatena.ne.jp/entry/"
+const SOURCE_URL = "https://b.hatena.ne.jp/entry/s/"
 
 var SeleniumUrl = env.GetEnv("SELENIUM_URL", "")
 
@@ -33,18 +33,13 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]
 	if err != nil {
 		return nil, fmt.Errorf("invalid selenium URL: %v", err)
 	}
-	options := agouti.ChromeOptions(
-		"args", []string{"--headless", "--disable-gpu", "--no-sandbox"},
-	)
-	driver := agouti.NewWebDriver(remoteURL.String(), []string{}, options)
 
-	err = driver.Start()
+	caps := selenium.Capabilities{"browserName": "firefox"}
+	driver, err := selenium.NewRemote(caps, remoteURL.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to start selenium driver: %v", err)
+		panic(err)
 	}
-	defer driver.Stop()
-
-	fmt.Println("selenium is ready.")
+	defer driver.Quit()
 
 	// Clean the URL (remove protocol)
 	cleanURL := articleURL
@@ -52,34 +47,24 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]
 	cleanURL = strings.Replace(cleanURL, "https://", "", 1)
 	hatenaURL := SOURCE_URL + cleanURL
 
-	// Create a new page and navigate to the Hatena URL
-	page, err := driver.NewPage()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new page: %v", err)
-	}
-
-	fmt.Println("selenium is requesting hatena.")
-	err = page.Navigate(hatenaURL)
+	err = driver.Get(hatenaURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to navigate to URL: %v", err)
 	}
 
 	// Wait for page to load
 	time.Sleep(1 * time.Second)
-	fmt.Println("request completed.")
 
 	// Find comments using CSS selector
 	articleSelector := "#container > div > div.entry-contents > div.entry-main > div.entry-comments > div > div.bookmarks-sort-panels.js-bookmarks-sort-panels > div.is-active.bookmarks-sort-panel.js-bookmarks-sort-panel > div > div > div.entry-comment-contents-main > .entry-comments-contents-body > .js-bookmark-comment"
-	articleElements, err := page.All(articleSelector).Elements()
+	articleElements, err := driver.FindElements(selenium.ByCSSSelector, articleSelector)
 	if err != nil {
 		fmt.Printf("error finding elements: %v\n", err)
 	}
 
-	fmt.Printf("articles.size(): %d\n", len(articleElements))
-
 	// Process each comment
 	for _, article := range articleElements {
-		text, err := article.GetText()
+		text, err := article.Text()
 		if err != nil {
 			fmt.Printf("failed to get text: %v\n", err)
 			continue
@@ -88,9 +73,6 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]
 		if text == "" || strings.TrimSpace(text) == "" || text == title {
 			continue
 		}
-
-		fmt.Println("-------------------------")
-		fmt.Printf("textLength: %d\n", len(text))
 
 		// Create NewsReaction object
 		reaction := models.NewsReaction{
@@ -103,6 +85,5 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]
 		reactions = append(reactions, reaction)
 	}
 
-	fmt.Println("selenium quit.")
 	return reactions, nil
 }
