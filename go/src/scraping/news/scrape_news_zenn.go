@@ -38,8 +38,7 @@ func (s *ScrapeNewsByZenn) ExtractNews() ([]models.News, error) {
 	var news []models.News
 	summarizer := s.summarizer
 
-	url := BaseURL
-	d, err := doc.GetWebDoc(url)
+	d, err := doc.GetWebDoc(BaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
@@ -49,19 +48,19 @@ func (s *ScrapeNewsByZenn) ExtractNews() ([]models.News, error) {
 
 	articles.Each(func(i int, art *goquery.Selection) {
 		title := strings.TrimSpace(art.Find("h2").Text())
-		art_url := url + strings.TrimSpace(art.AttrOr("href", ""))
+		artUrl := BaseURL + strings.TrimSpace(art.AttrOr("href", ""))
 
 		newsItem := models.News{
 			Title:           title,
 			Description:     "",
 			SourceBy:        s.GetSourceBy(),
-			ScrapedUrl:      url,
+			ScrapedUrl:      BaseURL,
 			ScrapedDateTime: time.Now(),
-			ArticleUrl:      art_url,
+			ArticleUrl:      artUrl,
 			ArticleImageUrl: "",
 		}
 
-		art_doc, err := doc.GetWebDoc(art_url)
+		art_doc, err := doc.GetWebDoc(artUrl)
 		if err != nil {
 			fmt.Printf("Failed to parse article HTML: %v\n", err)
 			return

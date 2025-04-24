@@ -49,7 +49,7 @@ func (s *ScrapeNewsByCloudWatchImpress) ExtractNews() ([]models.News, error) {
 	articles.Each(func(i int, art *goquery.Selection) {
 
 		titleElement := art.Find("p.title > a")
-		art_url := CloudWatchBaseURL + strings.TrimSpace(art.AttrOr("href", ""))
+		artUrl := strings.TrimSpace(titleElement.AttrOr("href", ""))
 		title := strings.TrimSpace(titleElement.Text())
 
 		newsItem := models.News{
@@ -58,18 +58,18 @@ func (s *ScrapeNewsByCloudWatchImpress) ExtractNews() ([]models.News, error) {
 			SourceBy:        CloudWatchSourceName,
 			ScrapedUrl:      CloudWatchBaseURL,
 			ScrapedDateTime: time.Now(),
-			ArticleUrl:      art_url,
+			ArticleUrl:      artUrl,
 			ArticleImageUrl: "",
 		}
 
-		art_doc, err := doc.GetWebDoc(art_url)
+		artDoc, err := doc.GetWebDoc(artUrl)
 		if err != nil {
 			fmt.Printf("Failed to parse article HTML: %v\n", err)
 			return
 		}
 
 		if summarizer != nil {
-			summary, err := summarizer.Summarize(art_doc.Text())
+			summary, err := summarizer.Summarize(artDoc.Text())
 			if err == nil {
 				newsItem.SummarizedText = summary
 			}

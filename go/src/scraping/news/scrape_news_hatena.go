@@ -2,7 +2,6 @@ package news
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -48,29 +47,27 @@ func (s *ScrapeNewsByHatena) ExtractNews() ([]models.News, error) {
 
 	articles.Each(func(i int, art *goquery.Selection) {
 		titleElement := art.Find(".entrylist-contents-title > a")
-		title := strings.TrimSpace(titleElement.Text())
-		art_url := HatenaBaseURL + strings.TrimSpace(art.AttrOr("href", ""))
-
-		description := strings.TrimSpace(art.Find("div.entrylist-contents-body").Text())
+		title := titleElement.Text()
+		artUrl := titleElement.AttrOr("href", "")
 
 		newsItem := models.News{
 			Title:           title,
-			Description:     description,
+			Description:     "",
 			SourceBy:        HatenaSourceName,
 			ScrapedUrl:      HatenaBaseURL,
 			ScrapedDateTime: time.Now(),
-			ArticleUrl:      art_url,
+			ArticleUrl:      artUrl,
 			ArticleImageUrl: "",
 		}
 
-		art_doc, err := doc.GetWebDoc(art_url)
+		artDoc, err := doc.GetWebDoc(artUrl)
 		if err != nil {
 			fmt.Printf("Failed to parse article HTML: %v\n", err)
 			return
 		}
 
 		if summarizer != nil {
-			summary, err := summarizer.Summarize(art_doc.Text())
+			summary, err := summarizer.Summarize(artDoc.Text())
 			if err == nil {
 				newsItem.SummarizedText = summary
 			}
