@@ -5,6 +5,6 @@ import (
 )
 
 type ScrapingReaction interface {
-	ExtractReactions(articleURL, title string) ([]models.NewsReaction, error)
+	ExtractReactions(newsId uint, articleURL string, title string) ([]models.NewsReaction, error)
 	GetSourceBy() string
 }

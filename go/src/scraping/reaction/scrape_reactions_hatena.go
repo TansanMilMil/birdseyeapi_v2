@@ -25,7 +25,7 @@ func (s *ScrapeReactionsByHatena) GetSourceBy() string {
 	return "Hatena"
 }
 
-func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]models.NewsReaction, error) {
+func (s *ScrapeReactionsByHatena) ExtractReactions(newsId uint, articleURL string, title string) ([]models.NewsReaction, error) {
 	var reactions []models.NewsReaction
 
 	// If SeleniumUrl is specified, use remote driver instead
@@ -76,10 +76,11 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(articleURL, title string) ([]
 
 		// Create NewsReaction object
 		reaction := models.NewsReaction{
-			ReactionType: "comment",
-			Source:       "hatena user",
-			Count:        1,
-			ScrapedAt:    time.Now().UTC(),
+			NewsID:          newsId,
+			Author:          "hatena user",
+			Comment:         strings.TrimSpace(text),
+			ScrapedDateTime: time.Now().UTC(),
+			CommentUrl:      hatenaURL,
 		}
 
 		reactions = append(reactions, reaction)

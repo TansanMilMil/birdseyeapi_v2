@@ -8,10 +8,10 @@ import (
 
 type NewsReaction struct {
 	gorm.Model
-	ID           uint      `gorm:"primarykey"`
-	NewsID       uint      `json:"newsId"`
-	ReactionType string    `json:"reactionType"`
-	Count        int       `json:"count"`
-	Source       string    `json:"source"`
-	ScrapedAt    time.Time `json:"scrapedAt"`
+	ID              uint      `gorm:"primarykey"`
+	NewsID          uint      `json:"newsId"`
+	Author          string    `json:"author"`
+	Comment         string    `json:"comment"`
+	ScrapedDateTime time.Time `json:"scrapedDateTime"`
+	CommentUrl      string    `json:"commentUrl"`
 }

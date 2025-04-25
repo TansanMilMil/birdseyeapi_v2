@@ -58,7 +58,7 @@ func (s *SiteScraping) ScrapeReactions(news models.News) ([]models.NewsReaction,
 	}
 
 	for _, scraper := range s.reactionScrapers {
-		reactions, err := scraper.ExtractReactions(news.ArticleUrl, news.Title)
+		reactions, err := scraper.ExtractReactions(news.ID, news.ArticleUrl, news.Title)
 		if err != nil {
 			fmt.Printf("Error scraping reactions from %s: %v\n", scraper.GetSourceBy(), err)
 			continue
