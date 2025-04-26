@@ -26,7 +26,8 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, news)
+	newsResponses := models.ToGetAllNewsResponse(news)
+	c.JSON(http.StatusOK, newsResponses)
 }
 
 func (h *NewsHandler) GetNewsById(c *gin.Context) {
@@ -43,7 +44,7 @@ func (h *NewsHandler) GetNewsById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, news)
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *NewsHandler) ScrapeNews(c *gin.Context) {
