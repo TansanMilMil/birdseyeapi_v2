@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping"
@@ -30,21 +29,17 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	c.JSON(http.StatusOK, newsResponses)
 }
 
-func (h *NewsHandler) GetNewsById(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
+func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
+	newsId := c.Query("id")
 
-	var news models.News
-	result := h.db.Preload("Reactions").First(&news, id)
+	var reactions []models.NewsReaction
+	result := h.db.Where("news_id = ?", newsId).Find(&reactions)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "News article not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, reactions)
 }
 
 func (h *NewsHandler) ScrapeNews(c *gin.Context) {
