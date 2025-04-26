@@ -1,7 +1,9 @@
 package api
 
 import (
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping"
@@ -19,11 +21,18 @@ func NewNewsHandler(db *gorm.DB) *NewsHandler {
 
 func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	var news []models.News
-	result := h.db.Preload("Reactions").Find(&news)
+
+	now := time.Now()
+	result := h.db.Where("DATE(created_at) >= DATE(?)", now).Preload("Reactions").Find(&news)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
+
+	// newsをランダムにシャッフルする
+	rand.Shuffle(len(news), func(i, j int) {
+		news[i], news[j] = news[j], news[i]
+	})
 
 	newsResponses := models.ToGetAllNewsResponse(news)
 	c.JSON(http.StatusOK, newsResponses)

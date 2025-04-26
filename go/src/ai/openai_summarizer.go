@@ -56,6 +56,7 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 				Role: "user",
 				Content: fmt.Sprintf(`次の文章を日本語で要約してください。
                     なお、要約結果の文章は200文字以内に収まるように調整してください。
+					また、読みやすいように適宜改行を含めてください。
                     ---
                     %s`, text),
 			},
