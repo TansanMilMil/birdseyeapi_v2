@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/aws"
+	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping"
 	"github.com/gin-gonic/gin"
@@ -78,6 +80,18 @@ func (h *NewsHandler) ScrapeNews(c *gin.Context) {
 		}
 
 		println("News scraping completed successfully, articles saved:", len(news))
+
+		err = aws.CreateInvalidation(
+			env.GetEnv("AWS_CLOUDFRONT_BIRDSEYEAPIPROXY_DISTRIBUTION_ID", ""),
+			[]string{
+				"/news/today-news",
+				"/news/news-reactions/*",
+			})
+		if err != nil {
+			println("Error creating CloudFront invalidation:", err.Error())
+		} else {
+			println("CloudFront invalidation created successfully")
+		}
 	}()
 
 	c.JSON(http.StatusOK, gin.H{
