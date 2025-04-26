@@ -46,7 +46,7 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 }
 
 func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
-	newsId := c.Query("id")
+	newsId := c.Param("news-id")
 
 	var reactions []models.NewsReaction
 	result := h.db.Where("news_id = ?", newsId).Limit(100).Find(&reactions)

@@ -96,7 +96,7 @@ func (s *ScrapeNewsByZDNet) ExtractNews() ([]models.News, error) {
 		imgElement := art.Find("a > div.thumb > img")
 		if imgElement.Length() > 0 {
 			if src, exists := imgElement.Attr("src"); exists {
-				imageURL = src
+				imageURL = ZDNetBaseURL + src
 			}
 		}
 
