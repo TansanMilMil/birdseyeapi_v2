@@ -23,13 +23,20 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	var news []models.News
 
 	now := time.Now()
-	result := h.db.Where("DATE(created_at) >= DATE(?)", now).Preload("Reactions").Find(&news)
+	result := h.db.Where("DATE(created_at) >= DATE(?)", now).Limit(100).Preload("Reactions").Find(&news)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
+	if len(news) == 0 {
+		yesterday := now.AddDate(0, 0, -1)
+		result = h.db.Where("DATE(created_at) >= DATE(?)", yesterday).Limit(100).Preload("Reactions").Find(&news)
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+			return
+		}
+	}
 
-	// newsをランダムにシャッフルする
 	rand.Shuffle(len(news), func(i, j int) {
 		news[i], news[j] = news[j], news[i]
 	})
@@ -42,7 +49,7 @@ func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
 	newsId := c.Query("id")
 
 	var reactions []models.NewsReaction
-	result := h.db.Where("news_id = ?", newsId).Find(&reactions)
+	result := h.db.Where("news_id = ?", newsId).Limit(100).Find(&reactions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
