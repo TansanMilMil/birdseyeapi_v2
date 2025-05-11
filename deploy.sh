@@ -1,25 +1,25 @@
 #!/bin/bash -eu
 
-cd `dirname $0`
+cd $(dirname $0)
 
 NO_SERVE=false
 INIT_DB=false
 
 for ARG in "$@"; do
     case "$ARG" in
-        --no-serve)
-            NO_SERVE=true
-            ;;
-        --init-db)
-            INIT_DB=true
-            ;;
+    --no-serve)
+        NO_SERVE=true
+        ;;
+    --init-db)
+        INIT_DB=true
+        ;;
     esac
 done
 
 echo "load .env ----------------------------"
 if [ ! -f .env ]; then
     echo ".env file not found!"
-else 
+else
     source .env
 fi
 
