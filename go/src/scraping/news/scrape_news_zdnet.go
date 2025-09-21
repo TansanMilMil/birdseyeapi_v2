@@ -49,11 +49,8 @@ func (s *ScrapeNewsByZDNet) ExtractNews() ([]models.News, error) {
 	}
 
 	articles := d.Find(ZDNetArticleSelector)
-
-	// Check if any articles were found
 	if articles.Length() == 0 {
-		fmt.Printf("Warning: No articles found with selector '%s'\n", ZDNetArticleSelector)
-		return news, nil
+		return nil, fmt.Errorf("no articles found with selector '%s'", ZDNetArticleSelector)
 	}
 
 	// Slice only if there are enough articles

@@ -13,14 +13,13 @@ const GoogleRSSTrendsDaily string = "https://trends.google.co.jp/trending/rss?ge
 type GoogleTrendCatcher struct {
 }
 
-func (gt *GoogleTrendCatcher) GetTrends() []models.News {
+func (gt *GoogleTrendCatcher) GetTrends() ([]models.News, error) {
 	var newsList []models.News
 	fp := gofeed.NewParser()
 
 	feed, err := fp.ParseURL(GoogleRSSTrendsDaily)
 	if err != nil {
-		fmt.Printf("Error parsing RSS feed: %v\n", err)
-		return newsList
+		return nil, fmt.Errorf("failed to parse RSS feed: %w", err)
 	}
 
 	for _, entry := range feed.Items {
@@ -28,7 +27,7 @@ func (gt *GoogleTrendCatcher) GetTrends() []models.News {
 		newsList = append(newsList, news)
 	}
 
-	return newsList
+	return newsList, nil
 }
 
 func entryToNews(entry *gofeed.Item) models.News {

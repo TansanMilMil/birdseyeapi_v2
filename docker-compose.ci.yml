@@ -10,5 +10,5 @@ services:
       - .:/project
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-    restart: always
+    restart: unless-stopped
     working_dir: /project

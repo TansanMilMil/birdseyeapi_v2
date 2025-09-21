@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -28,10 +29,8 @@ func NewNewsHandler(db *gorm.DB) *NewsHandler {
 }
 
 func (h *NewsHandler) GetAllNews(c *gin.Context) {
-	var news []models.News
-
 	now := time.Now()
-	news = h.newsRepo.GetNews(now, c)
+	news := h.newsRepo.GetNews(now, c)
 
 	if len(news) == 0 {
 		yesterday := now.AddDate(0, 0, -1)
@@ -39,10 +38,11 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	}
 
 	slice.Shuffle(news)
-
 	newsResponses := models.ToGetAllNewsResponse(news)
 
-	c.JSON(http.StatusOK, newsResponses)
+	c.JSON(http.StatusOK, gin.H{
+		"data": newsResponses,
+	})
 }
 
 func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
@@ -50,18 +50,22 @@ func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
 	reactions, err := h.reactionRepo.GetNewsReactionsById(newsId, c)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve news reactions",
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, reactions)
+	c.JSON(http.StatusOK, gin.H{
+		"data": reactions,
+	})
 }
 
 func (h *NewsHandler) Scrape(c *gin.Context) {
 	scraper := scraping.NewSiteScraping()
 
 	go func() {
-		news := h.scrapeNews(scraper, c)
+		news := h.scrapeNews(scraper)
 
 		h.scrapeReactions(news, scraper)
 
@@ -76,10 +80,10 @@ func (h *NewsHandler) Scrape(c *gin.Context) {
 	})
 }
 
-func (h *NewsHandler) scrapeNews(scraper *scraping.SiteScraping, c *gin.Context) []models.News {
+func (h *NewsHandler) scrapeNews(scraper *scraping.SiteScraping) []models.News {
 	news, err := scraper.ScrapeNews()
 	if err != nil {
-		println("Error scraping news:", err.Error())
+		log.Printf("Error scraping news: %v", err)
 		return nil
 	}
 
@@ -90,13 +94,13 @@ func (h *NewsHandler) scrapeReactions(news []models.News, scraper *scraping.Site
 	for i := range news {
 		reactions, err := scraper.ScrapeReactions(news[i])
 		if err != nil {
-			println("Error scraping reactions:", err.Error())
+			log.Printf("Error scraping reactions: %v", err)
 		}
 		news[i].Reactions = reactions
 		h.db.Create(&news[i])
 	}
 
-	println("News scraping completed successfully, articles saved:", len(news))
+	log.Printf("News scraping completed successfully, articles saved: %d", len(news))
 
 	return news
 }

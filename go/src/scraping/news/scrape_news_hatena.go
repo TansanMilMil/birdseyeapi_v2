@@ -43,6 +43,10 @@ func (s *ScrapeNewsByHatena) ExtractNews() ([]models.News, error) {
 	}
 
 	articles := d.Find(HatenaArticleSelector)
+	if articles.Length() == 0 {
+		return nil, fmt.Errorf("no articles found with selector '%s'", ZennArticleSelector)
+	}
+
 	articles = articles.Slice(0, HatenaMaxArticles)
 
 	articles.Each(func(i int, art *goquery.Selection) {

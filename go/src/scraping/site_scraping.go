@@ -32,7 +32,7 @@ func NewSiteScraping() *SiteScraping {
 }
 
 func (s *SiteScraping) ScrapeNews() ([]models.News, error) {
-	var allNews []models.News
+	allNews := []models.News{}
 
 	for _, scraper := range s.scrapers {
 		fmt.Print(scraper.GetSourceBy() + ": scraping")
@@ -50,7 +50,7 @@ func (s *SiteScraping) ScrapeNews() ([]models.News, error) {
 }
 
 func (s *SiteScraping) ScrapeReactions(news models.News) ([]models.NewsReaction, error) {
-	var allReactions []models.NewsReaction
+	allReactions := []models.NewsReaction{}
 
 	_, err := url.Parse(news.ArticleUrl)
 	if err != nil {

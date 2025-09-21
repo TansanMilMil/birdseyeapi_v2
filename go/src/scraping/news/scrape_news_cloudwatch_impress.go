@@ -44,6 +44,10 @@ func (s *ScrapeNewsByCloudWatchImpress) ExtractNews() ([]models.News, error) {
 	}
 
 	articles := d.Find(CloudWatchArticleSelector)
+	if articles.Length() == 0 {
+		return nil, fmt.Errorf("no articles found with selector '%s'", CloudWatchArticleSelector)
+	}
+
 	articles = articles.Slice(0, CloudWatchMaxArticles)
 
 	articles.Each(func(i int, art *goquery.Selection) {

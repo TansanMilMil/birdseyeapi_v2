@@ -7,7 +7,7 @@ import (
 
 func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
 	newsHandler := NewNewsHandler(db)
-	trendHandler := &TrendHandler{}
+	trendHandler := NewTrendHandler()
 
 	newsRoutes := r.Group("/news")
 	{
