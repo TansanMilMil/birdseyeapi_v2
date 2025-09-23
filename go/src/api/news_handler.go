@@ -41,7 +41,7 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	newsResponses := models.ToGetAllNewsResponse(news)
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": newsResponses,
+		"news": newsResponses,
 	})
 }
 
@@ -51,13 +51,13 @@ func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve news reactions",
+			"error": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": reactions,
+		"reactions": reactions,
 	})
 }
 

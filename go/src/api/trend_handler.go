@@ -30,6 +30,6 @@ func (h *TrendHandler) GetTrends(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": news,
+		"trends": news,
 	})
 }
