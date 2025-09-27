@@ -1,0 +1,56 @@
+{
+  "name": "BirdseyeAPI v2 Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/go:1.22",
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-vscode.vscode-docker",
+        "ms-vscode.makefile-tools",
+        "formulahendry.auto-rename-tag",
+        "ms-vscode.vscode-json"
+      ],
+      "settings": {
+        "go.toolsManagement.checkForUpdates": "local",
+        "go.useLanguageServer": true,
+        "go.gopath": "/go",
+        "go.goroot": "/usr/local/go",
+        "editor.formatOnSave": true,
+        "[go]": {
+          "editor.insertSpaces": false,
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [8080, 1111, 3307, 4444],
+
+  "postCreateCommand": "go mod download",
+
+  "remoteEnv": {
+    "BIRDSEYEAPI_V2_OPENAI_API_KEY": "${localEnv:BIRDSEYEAPI_V2_OPENAI_API_KEY}",
+    "BIRDSEYEAPI_V2_AWS_ACCESS_KEY_ID": "${localEnv:BIRDSEYEAPI_V2_AWS_ACCESS_KEY_ID}",
+    "BIRDSEYEAPI_V2_AWS_SECRET_ACCESS_KEY": "${localEnv:BIRDSEYEAPI_V2_AWS_SECRET_ACCESS_KEY}"
+  },
+
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+  ],
+
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/birdseyeapi_v2"
+}

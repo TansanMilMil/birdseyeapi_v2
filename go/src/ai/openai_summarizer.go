@@ -33,7 +33,7 @@ type OpenAIResponse struct {
 }
 
 func NewOpenAISummarizer() *OpenAISummarizer {
-	apiKey := os.Getenv("OPENAI_API_KEY")
+	apiKey := os.Getenv("BIRDSEYEAPI_V2_OPENAI_API_KEY")
 	baseURL := os.Getenv("OPENAI_CHAT_ENDPOINT")
 	openAIModel := os.Getenv("OPENAI_MODEL")
 

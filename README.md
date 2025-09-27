@@ -41,14 +41,11 @@ MYSQL_ROOT_PASSWORD=your_secure_password
 # DBName: birds_eye
 
 # OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo
 OPENAI_CHAT_ENDPOINT=https://api.openai.com/v1/chat/completions
 
 # AWS Configuration (for CDN invalidation)
 AWS_REGION=your_aws_region
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_CLOUDFRONT_BIRDSEYEAPIPROXY_DISTRIBUTION_ID=your_distribution_id
 
 # Application Settings
