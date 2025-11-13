@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -14,9 +15,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type NewsRepositoryInterface interface {
+	GetNews(t time.Time, c *gin.Context) []models.News
+}
+
 type NewsHandler struct {
 	db           *gorm.DB
-	newsRepo     *repo.NewsRepository
+	newsRepo     NewsRepositoryInterface
 	reactionRepo *repo.NewsReactionRepository
 }
 
@@ -29,12 +34,12 @@ func NewNewsHandler(db *gorm.DB) *NewsHandler {
 }
 
 func (h *NewsHandler) GetAllNews(c *gin.Context) {
-	now := time.Now()
-	news := h.newsRepo.GetNews(now, c)
-
-	if len(news) == 0 {
-		yesterday := now.AddDate(0, 0, -1)
-		news = h.newsRepo.GetNews(yesterday, c)
+	news, err := h.SearchNewsWithBackoff(10, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
 	}
 
 	slice.Shuffle(news)
@@ -43,6 +48,25 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"news": newsResponses,
 	})
+}
+
+func (h *NewsHandler) SearchNewsWithBackoff(backoffDays int, c *gin.Context) ([]models.News, error) {
+	if backoffDays < 0 {
+		return nil, fmt.Errorf("backoffDays must be non-negative")
+	}
+
+	date := time.Now()
+	news := h.newsRepo.GetNews(date, c)
+
+	for i := 0; i < backoffDays; i++ {
+		date = date.AddDate(0, 0, -1)
+		news = h.newsRepo.GetNews(date, c)
+		if len(news) >= 1 {
+			break
+		}
+	}
+
+	return news, nil
 }
 
 func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
