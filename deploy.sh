@@ -25,10 +25,15 @@ fi
 
 VENUS_TARGET_DIR=$VENUS_HOME/birdseyeapi_v2
 
-echo "build ----------------------------"
+echo "docker compose setup ----------------------------"
 docker compose down
 docker compose -f ./docker-compose.ci.yml up -d go
-docker compose exec go ./build.sh --no-docker-compose
+
+echo "run all tests ----------------------------"
+docker compose exec go ./test.sh
+
+echo "build ----------------------------"
+docker compose exec go ./build.sh
 tar cvfz ./go/dist.tgz ./go/dist/
 
 echo "docker compose teardown ----------------------------"
