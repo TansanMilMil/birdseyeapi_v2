@@ -41,6 +41,7 @@ Thumbs.db
 /build/
 /bin/
 */dist/
+deploy-temp/
 
 # Log files
 *.log
