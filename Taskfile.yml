@@ -1,0 +1,156 @@
+version: "3"
+
+dotenv: [".env"]
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  test:
+    desc: Run tests in Docker
+    cmds:
+      - echo "==== Docker compose setup ===="
+      - docker compose down
+      - docker compose -f ./docker-compose.ci.yml up -d go
+      - echo "==== Run all tests ===="
+      - docker compose exec go ./test.sh
+      - docker compose down
+
+  build:
+    desc: Build binary in Docker
+    deps: [test]
+    cmds:
+      - echo "==== Docker compose setup ===="
+      - docker compose down
+      - docker compose -f ./docker-compose.ci.yml up -d go
+      - echo "==== Build ===="
+      - docker compose exec go ./build.sh
+      - echo "==== Docker compose teardown ===="
+      - docker compose down
+
+  package:
+    desc: Create deployment package
+    deps: [build]
+    cmds:
+      - echo "==== Create deploy package ===="
+      - rm -rf ./deploy-temp
+      - mkdir -p ./deploy-temp
+      - cp -r ./go/dist ./deploy-temp/
+      - cp ./docker-compose.yml ./deploy-temp/
+      - cp ./go-entrypoint.sh ./deploy-temp/
+      - cp ./init_db.sh ./deploy-temp/
+      - cp -r ./nginx ./deploy-temp/
+      - cp -r ./mysql ./deploy-temp/
+      - tar czf ./deploy.tgz -C ./deploy-temp .
+      - rm -rf ./deploy-temp
+      - echo "Package created deploy.tgz"
+
+  transfer:
+    desc: Transfer package to remote
+    deps: [package]
+    vars:
+      TARGET_DIR: "{{.VENUS_HOME}}/birdseyeapi_v2"
+    cmds:
+      - echo "==== Transfer to remote ===="
+      - |
+        if [ -z "{{.VENUS_SSH_HOST}}" ]; then
+          echo "Error: VENUS_SSH_HOST is not set. Please check .env file."
+          exit 1
+        fi
+      - |
+        if [ -z "{{.VENUS_HOME}}" ]; then
+          echo "Error: VENUS_HOME is not set. Please check .env file."
+          exit 1
+        fi
+      - ssh {{.VENUS_SSH_HOST}} mkdir -p {{.TARGET_DIR}}
+      - scp ./deploy.tgz {{.VENUS_SSH_HOST}}:{{.TARGET_DIR}}/deploy.tgz
+      - ssh {{.VENUS_SSH_HOST}} "tar xzf {{.TARGET_DIR}}/deploy.tgz -C {{.TARGET_DIR}} && rm {{.TARGET_DIR}}/deploy.tgz"
+      - rm ./deploy.tgz
+      - echo ""
+      - echo "Current files on remote:"
+      - ssh {{.VENUS_SSH_HOST}} ls -alh {{.TARGET_DIR}}
+
+  stop-remote:
+    desc: Stop containers on remote
+    vars:
+      TARGET_DIR: "{{.VENUS_HOME}}/birdseyeapi_v2"
+    cmds:
+      - echo "==== Stop birdseyeapi on remote ===="
+      - |
+        if [ -z "{{.VENUS_SSH_HOST}}" ]; then
+          echo "Error: VENUS_SSH_HOST is not set. Please check .env file."
+          exit 1
+        fi
+      - ssh {{.VENUS_SSH_HOST}} docker compose -f {{.TARGET_DIR}}/docker-compose.yml down
+
+  start-remote:
+    desc: Start containers on remote
+    vars:
+      TARGET_DIR: "{{.VENUS_HOME}}/birdseyeapi_v2"
+    cmds:
+      - echo "==== Start birdseyeapi on remote ===="
+      - |
+        if [ -z "{{.VENUS_SSH_HOST}}" ]; then
+          echo "Error: VENUS_SSH_HOST is not set. Please check .env file."
+          exit 1
+        fi
+      - ssh {{.VENUS_SSH_HOST}} docker compose -f {{.TARGET_DIR}}/docker-compose.yml up -d
+      - echo ""
+      - echo "Waiting for 10 seconds to get the latest status..."
+      - sleep 10
+      - echo "Current docker containers on remote:"
+      - ssh {{.VENUS_SSH_HOST}} docker ps
+
+  init-db:
+    desc: Initialize database on remote
+    deps: [start-remote]
+    vars:
+      TARGET_DIR: "{{.VENUS_HOME}}/birdseyeapi_v2"
+    cmds:
+      - echo "==== Initialize database ===="
+      - echo "Waiting for MySQL to start..."
+      - sleep 5
+      - ssh {{.VENUS_SSH_HOST}} {{.TARGET_DIR}}/init_db.sh
+
+  deploy:
+    desc: Full deployment (test + build + package + transfer + start)
+    deps: [transfer, stop-remote]
+    cmds:
+      - task: start-remote
+      - echo ""
+      - echo "==== Deploy finished! ===="
+      - echo ""
+      - echo "==== Health check ===="
+      - echo "Waiting for 20 seconds to get the latest status..."
+      - sleep 20
+      - task: check-remote-health
+
+  deploy-full:
+    desc: Full deployment with DB initialization
+    deps: [transfer, stop-remote]
+    cmds:
+      - task: init-db
+      - echo ""
+      - echo "==== Deploy finished! ===="
+      - echo ""
+      - echo "==== Health check ===="
+      - echo "Waiting for 20 seconds to get the latest status..."
+      - sleep 20
+      - task: check-remote-health
+
+  check-remote-health:
+    desc: Check remote health status
+    cmds:
+      - ./check-remote-curl.sh
+
+  clean:
+    desc: Clean temporary files
+    cmds:
+      - echo "==== Clean temporary files ===="
+      - rm -rf ./deploy-temp
+      - rm -f ./deploy.tgz
+      - docker compose down
+      - echo "Cleanup complete"

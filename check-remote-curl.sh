@@ -8,5 +8,8 @@ else
 fi
 
 ssh $VENUS_SSH_HOST curl -v localhost:1111/HealthCheck
+
+sleep 5
+
 echo "----------------------------------------"
 ssh $VENUS_SSH_HOST curl -v localhost:1111/news/today-news | jq .
