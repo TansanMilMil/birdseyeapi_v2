@@ -9,53 +9,54 @@ import (
 	"os"
 )
 
-const OPENAI_CHAT_ENDPOINT = "https://api.openai.com/v1/chat/completions"
-const OPENAI_MODEL = "gpt-4.1-mini"
+const CLAUDE_CHAT_ENDPOINT = "https://api.anthropic.com/v1/messages"
+const CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
 
-type OpenAISummarizer struct {
+type ClaudeSummarizer struct {
 	apiKey      string
 	baseURL     string
-	openAIModel string
+	claudeModel string
+	maxTokens   int
 }
 
-type OpenAIRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
+type ClaudeRequest struct {
+	Model     string          `json:"model"`
+	Messages  []ClaudeMessage `json:"messages"`
+	MaxTokens int             `json:"max_tokens"`
 }
 
-type Message struct {
+type ClaudeMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-type OpenAIResponse struct {
-	Choices []struct {
-		Message struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
+type ClaudeResponse struct {
+	Content []struct {
+		Text string `json:"text"`
+	} `json:"content"`
 }
 
-func NewOpenAISummarizer() *OpenAISummarizer {
-	apiKey := os.Getenv("BIRDSEYEAPI_V2_OPENAI_API_KEY")
-	baseURL := OPENAI_CHAT_ENDPOINT
-	openAIModel := OPENAI_MODEL
+func NewClaudeSummarizer() *ClaudeSummarizer {
+	apiKey := os.Getenv("BIRDSEYEAPI_V2_CLAUDE_API_KEY")
+	baseURL := CLAUDE_CHAT_ENDPOINT
+	claudeModel := CLAUDE_MODEL
 
-	return &OpenAISummarizer{
+	return &ClaudeSummarizer{
 		apiKey:      apiKey,
 		baseURL:     baseURL,
-		openAIModel: openAIModel,
+		claudeModel: claudeModel,
+		maxTokens:   1024,
 	}
 }
 
-func (s *OpenAISummarizer) Summarize(text string) (string, error) {
+func (s *ClaudeSummarizer) Summarize(text string) (string, error) {
 	if s.apiKey == "" {
-		return "", fmt.Errorf("OpenAI API key not found")
+		return "", fmt.Errorf("claude API key not found")
 	}
 
-	reqBody := OpenAIRequest{
-		Model: s.openAIModel,
-		Messages: []Message{
+	reqBody := ClaudeRequest{
+		Model: s.claudeModel,
+		Messages: []ClaudeMessage{
 			{
 				Role: "user",
 				Content: fmt.Sprintf(`次の文章を日本語で要約してください。
@@ -65,6 +66,7 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
                     %s`, text),
 			},
 		},
+		MaxTokens: s.maxTokens,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -77,8 +79,9 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+s.apiKey)
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("x-api-key", s.apiKey)
+	req.Header.Add("anthropic-version", "2023-06-01")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -92,15 +95,15 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 		return "", fmt.Errorf("API returned status code %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var respBody OpenAIResponse
+	var respBody ClaudeResponse
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode response: %v", err)
 	}
 
-	if len(respBody.Choices) == 0 {
+	if len(respBody.Content) == 0 {
 		return "", fmt.Errorf("no summary was generated")
 	}
 
-	return respBody.Choices[0].Message.Content, nil
+	return respBody.Content[0].Text, nil
 }
