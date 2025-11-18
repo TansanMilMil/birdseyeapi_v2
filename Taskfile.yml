@@ -128,19 +128,6 @@ tasks:
       - sleep 20
       - task: check-remote-health
 
-  deploy-full:
-    desc: Full deployment with DB initialization
-    deps: [transfer, stop-remote]
-    cmds:
-      - task: init-db
-      - echo ""
-      - echo "==== Deploy finished! ===="
-      - echo ""
-      - echo "==== Health check ===="
-      - echo "Waiting for 20 seconds to get the latest status..."
-      - sleep 20
-      - task: check-remote-health
-
   check-remote-health:
     desc: Check remote health status
     cmds:
