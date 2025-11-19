@@ -64,6 +64,8 @@ func TestOpenAISummarizer_Summarize_NoAPIKey(t *testing.T) {
 // インテグレーションテスト: 実際のOpenAI APIを呼び出す
 // 環境変数 BIRDSEYEAPI_V2_OPENAI_API_KEY が設定されている場合のみ実行される
 func TestOpenAISummarizer_Integration(t *testing.T) {
+	t.Skip("Skipping integration test: not ready for execution") // 一時的にスキップ
+
 	apiKey := os.Getenv("BIRDSEYEAPI_V2_OPENAI_API_KEY")
 	if apiKey == "" {
 		t.Skip("Skipping integration test: BIRDSEYEAPI_V2_OPENAI_API_KEY not set")

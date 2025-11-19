@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(docker exec:*)",
+      "Bash(ssh:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

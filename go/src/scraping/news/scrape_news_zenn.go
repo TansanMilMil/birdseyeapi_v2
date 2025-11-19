@@ -7,7 +7,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping/doc"
 )
@@ -18,7 +17,7 @@ const (
 	ZennArticleSelector = "#tech-trend > div > div > div > article > div > a"
 )
 
-var MaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 15)
+var MaxArticles = 15
 
 type ScrapeNewsByZenn struct {
 	summarizer ai.Summarizer

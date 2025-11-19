@@ -38,7 +38,8 @@ tasks:
       - echo "==== Create deploy package ===="
       - rm -rf ./deploy-temp
       - mkdir -p ./deploy-temp
-      - cp -r ./go/dist ./deploy-temp/
+      - mkdir -p ./deploy-temp/go
+      - cp -r ./go/dist ./deploy-temp/go
       - cp ./docker-compose.yml ./deploy-temp/
       - cp ./go-entrypoint.sh ./deploy-temp/
       - cp ./init_db.sh ./deploy-temp/

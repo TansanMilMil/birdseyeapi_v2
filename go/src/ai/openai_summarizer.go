@@ -83,6 +83,9 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Print("s.baseURL", s.baseURL)
+		fmt.Print("reqBody.Model", reqBody.Model)
+		fmt.Print("reqBody.Messages[0].len:", len(reqBody.Messages[0].Content))
 		return "", fmt.Errorf("failed to send request: %v", err)
 	}
 	defer resp.Body.Close()

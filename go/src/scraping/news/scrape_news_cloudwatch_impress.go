@@ -7,18 +7,17 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping/doc"
 )
 
 const (
 	CloudWatchSourceName      = "CloudWatch by Impress"
-	CloudWatchBaseURL         = "https://cloud.watch.impress.co.jp/"
+	CloudWatchBaseURL         = "https://cloud.watch.impress.co.jp"
 	CloudWatchArticleSelector = "li.item.news"
 )
 
-var CloudWatchMaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 5)
+var CloudWatchMaxArticles = 5
 
 type ScrapeNewsByCloudWatchImpress struct {
 	summarizer ai.Summarizer
@@ -53,8 +52,14 @@ func (s *ScrapeNewsByCloudWatchImpress) ExtractNews() ([]models.News, error) {
 	articles.Each(func(i int, art *goquery.Selection) {
 
 		titleElement := art.Find("p.title > a")
-		artUrl := strings.TrimSpace(titleElement.AttrOr("href", ""))
+		artUrlPath := strings.TrimSpace(titleElement.AttrOr("href", ""))
 		title := strings.TrimSpace(titleElement.Text())
+
+		// Convert relative path to absolute URL
+		artUrl := artUrlPath
+		if artUrlPath != "" && !strings.HasPrefix(artUrlPath, "http") {
+			artUrl = CloudWatchBaseURL + artUrlPath
+		}
 
 		newsItem := models.News{
 			Title:           title,

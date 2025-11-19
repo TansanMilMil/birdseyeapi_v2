@@ -6,7 +6,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/ai"
-	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/scraping/doc"
 )
@@ -17,7 +16,7 @@ const (
 	HatenaArticleSelector = "#container .entrylist-contents-main"
 )
 
-var HatenaMaxArticles = env.GetEnvInt("SCRAPING_ARTICLES", 15)
+var HatenaMaxArticles = 15
 
 type ScrapeNewsByHatena struct {
 	summarizer ai.Summarizer
