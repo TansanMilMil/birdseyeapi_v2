@@ -23,7 +23,9 @@
         "formulahendry.auto-rename-tag",
         "ms-vscode.vscode-json",
         "Anthropic.claude-code",
-        "task.vscode-task"
+        "task.vscode-task",
+        "github.vscode-github-actions",
+        "mhutchie.git-graph"
       ],
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
