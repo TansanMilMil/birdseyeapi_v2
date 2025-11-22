@@ -1,0 +1,146 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  # Common Configuration
+  GO_VERSION: '1.24'
+  AWS_REGION: ap-northeast-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install Task
+        uses: ./.github/actions/setup-task
+
+      - name: Build package
+        run: task package
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy.tgz
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    env:
+      # EC2 Configuration
+      EC2_USER: ec2-user
+      EC2_DEPLOY_DIR: ~/birdseyeapi_v2
+      EC2_TMP_FILE: /tmp/deploy.tgz
+      EC2_HOST: ${{ secrets.EC2_URANUS_PUBLIC_IP }}
+      EC2_INSTANCE_ID: ${{ secrets.EC2_URANUS_INSTANCE_ID }}
+
+      # SSH Configuration
+      SSH_KEY_PATH: ~/.ssh/ec2_key.pem
+      SSH_OPTS: -o StrictHostKeyChecking=no
+
+    steps:
+      # ============================================================
+      # Preparation
+      # ============================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
+
+      - name: Install Task
+        uses: ./.github/actions/setup-task
+
+      # ============================================================
+      # EC2 Instance Management
+      # ============================================================
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start EC2 instance
+        id: start-ec2
+        uses: ./.github/actions/ec2-start
+        with:
+          instance-id: ${{ env.EC2_INSTANCE_ID }}
+
+      # ============================================================
+      # Deployment Phase
+      # ============================================================
+      - name: Setup SSH key
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_URANUS_SSH_PEM }}" > ${{ env.SSH_KEY_PATH }}
+          chmod 600 ${{ env.SSH_KEY_PATH }}
+
+      - name: Transfer package to EC2
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          scp ${{ env.SSH_OPTS }} -i ${{ env.SSH_KEY_PATH }} \
+            deploy.tgz \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.EC2_TMP_FILE }}
+
+      - name: Extract package on EC2
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.SSH_KEY_PATH }} \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            echo "Creating deployment directory..."
+            mkdir -p ${{ env.EC2_DEPLOY_DIR }}
+
+            echo "Extracting package..."
+            tar -xzf ${{ env.EC2_TMP_FILE }} -C ${{ env.EC2_DEPLOY_DIR }}
+
+            echo "Deployment files:"
+            ls -lh ${{ env.EC2_DEPLOY_DIR }}
+
+            echo "Cleaning up temporary files..."
+            rm -f ${{ env.EC2_TMP_FILE }}
+
+            echo "Deployment completed"
+          EOF
+
+      # ============================================================
+      # Service Management
+      # ============================================================
+      - name: Manage remote services
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          echo "Stopping remote service..."
+          task stop-remote
+
+          echo "Starting remote service..."
+          task start-remote
+
+          echo "Checking remote health..."
+          task check-remote-health
+
+      # ============================================================
+      # Cleanup Phase (Always runs if EC2 was started)
+      # ============================================================
+      - name: Stop EC2 instance
+        if: always() && steps.start-ec2.outputs.started == 'true'
+        uses: ./.github/actions/ec2-stop
+        with:
+          instance-id: ${{ env.EC2_INSTANCE_ID }}

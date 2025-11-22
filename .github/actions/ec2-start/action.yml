@@ -1,0 +1,31 @@
+name: Start EC2 Instance
+description: Start an EC2 instance and wait for it to be ready
+
+inputs:
+  instance-id:
+    description: EC2 instance ID to start
+    required: true
+
+outputs:
+  started:
+    description: Whether the EC2 instance was started successfully
+    value: ${{ steps.start.outputs.started }}
+
+runs:
+  using: composite
+  steps:
+    - name: Start EC2 instance
+      id: start
+      shell: bash
+      run: |
+        echo "Starting EC2 instance..."
+        aws ec2 start-instances --instance-ids ${{ inputs.instance-id }}
+
+        echo "Waiting for instance to be running..."
+        aws ec2 wait instance-running --instance-ids ${{ inputs.instance-id }}
+
+        echo "Waiting for status checks to pass..."
+        aws ec2 wait instance-status-ok --instance-ids ${{ inputs.instance-id }}
+
+        echo "EC2 instance is ready"
+        echo "started=true" >> $GITHUB_OUTPUT

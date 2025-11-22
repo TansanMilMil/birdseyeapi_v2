@@ -1,0 +1,17 @@
+name: Stop EC2 Instance
+description: Stop an EC2 instance
+
+inputs:
+  instance-id:
+    description: EC2 instance ID to stop
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Stop EC2 instance
+      shell: bash
+      run: |
+        echo "Stopping EC2 instance..."
+        aws ec2 stop-instances --instance-ids ${{ inputs.instance-id }}
+        echo "EC2 instance stopped"

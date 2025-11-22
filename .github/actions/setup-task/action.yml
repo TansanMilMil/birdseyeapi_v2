@@ -1,0 +1,9 @@
+name: Setup Task
+description: Install Task (task runner)
+
+runs:
+  using: composite
+  steps:
+    - name: Install Task
+      shell: bash
+      run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
