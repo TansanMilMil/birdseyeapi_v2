@@ -22,7 +22,8 @@
         "ms-vscode.makefile-tools",
         "formulahendry.auto-rename-tag",
         "ms-vscode.vscode-json",
-        "Anthropic.claude-code"
+        "Anthropic.claude-code",
+        "task.vscode-task"
       ],
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
@@ -53,7 +54,9 @@
   },
 
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached"
   ],
 
   "remoteUser": "vscode",
