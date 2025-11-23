@@ -156,17 +156,43 @@ jobs:
       # ============================================================
       # Service Management
       # ============================================================
-      - name: Manage remote services
+      - name: Stop remote services on Venus
         if: steps.start-ec2.outputs.started == 'true'
         run: |
-          echo "Stopping remote service..."
-          task stop-remote
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            echo "==== Stop birdseyeapi on Venus ===="
+            ssh ${{ env.SSH_OPTS }} -i ${{ env.VENUS_SSH_KEY_PATH }} \
+              ${{ env.VENUS_USER }}@${{ env.VENUS_HOST }} \
+              "docker compose -f ${{ env.VENUS_DEPLOY_DIR }}/docker-compose.yml down"
+          EOF
 
-          echo "Starting remote service..."
-          task start-remote
+      - name: Start remote services on Venus
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            echo "==== Start birdseyeapi on Venus ===="
+            ssh ${{ env.SSH_OPTS }} -i ${{ env.VENUS_SSH_KEY_PATH }} \
+              ${{ env.VENUS_USER }}@${{ env.VENUS_HOST }} \
+              "docker compose -f ${{ env.VENUS_DEPLOY_DIR }}/docker-compose.yml up -d"
 
-          echo "Checking remote health..."
-          task check-remote-health
+            echo ""
+            echo "Waiting for 10 seconds to get the latest status..."
+            sleep 10
+
+            echo "Current docker containers on Venus:"
+            ssh ${{ env.SSH_OPTS }} -i ${{ env.VENUS_SSH_KEY_PATH }} \
+              ${{ env.VENUS_USER }}@${{ env.VENUS_HOST }} \
+              "docker ps"
+          EOF
+
+      - name: Check remote health
+        if: steps.start-ec2.outputs.started == 'true'
+        run: |
+          echo "Waiting for services to be ready..."
+          sleep 10
+          ./check-remote-curl.sh
 
       # ============================================================
       # Cleanup Phase (Always runs if EC2 was started)
