@@ -49,8 +49,15 @@ jobs:
       EC2_HOST: ${{ secrets.EC2_URANUS_PUBLIC_IP }}
       EC2_INSTANCE_ID: ${{ secrets.EC2_URANUS_INSTANCE_ID }}
 
+      # Venus Configuration
+      VENUS_USER: alma
+      VENUS_HOST: os3-386-26416.vs.sakura.ne.jp
+      VENUS_DEPLOY_DIR: /home/alma/birdseyeapi_v2
+      VENUS_TMP_FILE: /home/alma/deploy.tgz
+
       # SSH Configuration
-      SSH_KEY_PATH: ~/.ssh/ec2_key.pem
+      EC2_SSH_KEY_PATH: ~/.ssh/ec2_key.pem
+      VENUS_SSH_KEY_PATH: ~/.ssh/venus_key.pem
       SSH_OPTS: -o StrictHostKeyChecking=no
 
     steps:
@@ -91,34 +98,59 @@ jobs:
         if: steps.start-ec2.outputs.started == 'true'
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_URANUS_SSH_PEM }}" > ${{ env.SSH_KEY_PATH }}
-          chmod 600 ${{ env.SSH_KEY_PATH }}
+          echo "${{ secrets.EC2_URANUS_SSH_PEM }}" > ${{ env.EC2_SSH_KEY_PATH }}
+          chmod 600 ${{ env.EC2_SSH_KEY_PATH }}
 
       - name: Transfer package to EC2
         if: steps.start-ec2.outputs.started == 'true'
         run: |
-          scp ${{ env.SSH_OPTS }} -i ${{ env.SSH_KEY_PATH }} \
+          scp ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
             deploy.tgz \
             ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.EC2_TMP_FILE }}
 
-      - name: Extract package on EC2
+      - name: Transfer package from EC2 to venus
         if: steps.start-ec2.outputs.started == 'true'
         run: |
-          ssh ${{ env.SSH_OPTS }} -i ${{ env.SSH_KEY_PATH }} \
+          # Setup Venus SSH key on EC2
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
             ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
-            echo "Creating deployment directory..."
-            mkdir -p ${{ env.EC2_DEPLOY_DIR }}
+            echo "Setting up Venus SSH key..."
+            mkdir -p ~/.ssh
+            cat > ${{ env.VENUS_SSH_KEY_PATH }} << 'VENUS_KEY'
+          ${{ secrets.VENUS_SSH_KEY }}
+          VENUS_KEY
+            chmod 600 ${{ env.VENUS_SSH_KEY_PATH }}
+          EOF
 
-            echo "Extracting package..."
-            tar -xzf ${{ env.EC2_TMP_FILE }} -C ${{ env.EC2_DEPLOY_DIR }}
+          # Transfer package from EC2 to Venus
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            echo "Transferring package to Venus server..."
+            scp ${{ env.SSH_OPTS }} -i ${{ env.VENUS_SSH_KEY_PATH }} \
+              ${{ env.EC2_TMP_FILE }} \
+              ${{ env.VENUS_USER }}@${{ env.VENUS_HOST }}:${{ env.VENUS_TMP_FILE }}
+          EOF
 
-            echo "Deployment files:"
-            ls -lh ${{ env.EC2_DEPLOY_DIR }}
+          # Extract package on Venus
+          ssh ${{ env.SSH_OPTS }} -i ${{ env.EC2_SSH_KEY_PATH }} \
+            ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            echo "Extracting package on Venus server..."
+            ssh ${{ env.SSH_OPTS }} -i ${{ env.VENUS_SSH_KEY_PATH }} \
+              ${{ env.VENUS_USER }}@${{ env.VENUS_HOST }} << 'VENUS_CMD'
+              echo "Creating deployment directory..."
+              mkdir -p ${{ env.VENUS_DEPLOY_DIR }}
 
-            echo "Cleaning up temporary files..."
-            rm -f ${{ env.EC2_TMP_FILE }}
+              echo "Extracting package..."
+              tar -xzf ${{ env.VENUS_TMP_FILE }} -C ${{ env.VENUS_DEPLOY_DIR }}
 
-            echo "Deployment completed"
+              echo "Deployment files:"
+              ls -lh ${{ env.VENUS_DEPLOY_DIR }}
+
+              echo "Cleaning up temporary files..."
+              rm -f ${{ env.VENUS_TMP_FILE }}
+
+              echo "Deployment to Venus completed"
+          VENUS_CMD
           EOF
 
       # ============================================================
