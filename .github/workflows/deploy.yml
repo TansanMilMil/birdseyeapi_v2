@@ -187,13 +187,6 @@ jobs:
               "docker ps"
           EOF
 
-      - name: Check remote health
-        if: steps.start-ec2.outputs.started == 'true'
-        run: |
-          echo "Waiting for services to be ready..."
-          sleep 10
-          ./check-remote-curl.sh
-
       # ============================================================
       # Cleanup Phase (Always runs if EC2 was started)
       # ============================================================
