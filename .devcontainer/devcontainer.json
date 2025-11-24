@@ -44,7 +44,7 @@
     }
   },
 
-  "forwardPorts": [8080, 1111, 3307, 4444],
+  "forwardPorts": [8080, 1111, 3307, 4444, 3000],
 
   "postCreateCommand": "go mod download",
 

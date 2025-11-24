@@ -50,6 +50,15 @@ logs/
 # Docker related
 docker-compose.override.yml
 
+# Grafana data
+grafana/grafana-data/
+
+# Loki data
+loki/data/
+
+# Promtail positions
+promtail/positions.yaml
+
 # Local database files
 *.db
 *.sqlite
