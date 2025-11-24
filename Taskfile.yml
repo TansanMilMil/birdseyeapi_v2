@@ -45,6 +45,9 @@ tasks:
       - cp ./init_db.sh ./deploy-temp/
       - cp -r ./nginx ./deploy-temp/
       - cp -r ./mysql ./deploy-temp/
+      - cp -r ./loki ./deploy-temp/
+      - cp -r ./promtail ./deploy-temp/
+      - cp -r ./grafana ./deploy-temp/
       - tar czf ./deploy.tgz -C ./deploy-temp .
       - rm -rf ./deploy-temp
       - echo "Package created deploy.tgz"
