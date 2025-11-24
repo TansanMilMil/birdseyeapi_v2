@@ -91,7 +91,7 @@ services:
       app_name: "mysql"
 
   loki:
-    image: grafana/loki:2.9.0
+    image: grafana/loki:3.3.2
     user: root
     ports:
       - "3100:3100"
@@ -101,7 +101,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:3.3.2
     user: root
     volumes:
       - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml
@@ -112,7 +112,7 @@ services:
       - loki
 
   grafana:
-    image: grafana/grafana:10.0.0
+    image: grafana/grafana:11.4.0
     user: root
     ports:
       - "3000:3000"
