@@ -98,6 +98,7 @@ services:
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
       - loki-data:/loki
+    restart: unless-stopped
     command: -config.file=/etc/loki/local-config.yaml
 
   promtail:
@@ -107,6 +108,8 @@ services:
       - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./nginx/log:/var/log/nginx:ro
+    restart: unless-stopped
     command: -config.file=/etc/promtail/config.yaml
     depends_on:
       - loki
@@ -122,6 +125,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+    restart: unless-stopped
     depends_on:
       - loki
 

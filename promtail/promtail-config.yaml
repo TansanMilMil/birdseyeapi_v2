@@ -49,12 +49,62 @@ scrape_configs:
             output: log
             stream: stream
             time: time
-      
+
       # タイムスタンプを設定
       - timestamp:
           source: time
           format: RFC3339Nano
-      
+
       # ログ出力を設定
       - output:
           source: output
+
+  # Nginxのアクセスログを収集
+  - job_name: nginx_access
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          app: nginx
+          log_type: access
+          __path__: /var/log/nginx/access.log
+
+    pipeline_stages:
+      # Nginxアクセスログのパース（combined形式）
+      - regex:
+          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<time_local>[^\]]+)\] "(?P<method>[A-Z]+) (?P<request_uri>[^ ]*) (?P<protocol>[^"]*)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"'
+
+      # ラベルとして抽出
+      - labels:
+          method:
+          status:
+          remote_addr:
+
+      # タイムスタンプを設定
+      - timestamp:
+          source: time_local
+          format: 02/Jan/2006:15:04:05 -0700
+
+  # Nginxのエラーログを収集
+  - job_name: nginx_error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          app: nginx
+          log_type: error
+          __path__: /var/log/nginx/error.log
+
+    pipeline_stages:
+      # Nginxエラーログのパース
+      - regex:
+          expression: '^(?P<timestamp>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?P<level>\w+)\] (?P<message>.*)'
+
+      # ラベルとして抽出
+      - labels:
+          level:
+
+      # タイムスタンプを設定
+      - timestamp:
+          source: timestamp
+          format: 2006/01/02 15:04:05
