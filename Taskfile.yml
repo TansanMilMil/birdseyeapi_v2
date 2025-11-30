@@ -9,6 +9,16 @@ tasks:
       - task --list
     silent: true
 
+  run:
+    cmds:
+      - docker compose down
+      - docker compose up -d
+      - docker compose exec go ./run.sh
+  
+  stop:
+    cmds:
+      - docker compose down
+
   test:
     desc: Run tests in Docker
     cmds:

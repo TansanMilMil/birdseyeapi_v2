@@ -72,13 +72,14 @@ scrape_configs:
     pipeline_stages:
       # Nginxアクセスログのパース（combined形式）
       - regex:
-          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<time_local>[^\]]+)\] "(?P<method>[A-Z]+) (?P<request_uri>[^ ]*) (?P<protocol>[^"]*)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"'
+          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<time_local>[^\]]+)\] "(?P<method>[A-Z]+) (?P<request_uri>[^ ]*) (?P<protocol>[^"]*)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)" "(?P<http_x_forwarded_for>[^"]*)"'
 
       # ラベルとして抽出
       - labels:
           method:
           status:
           remote_addr:
+          http_x_forwarded_for:
 
       # タイムスタンプを設定
       - timestamp:
