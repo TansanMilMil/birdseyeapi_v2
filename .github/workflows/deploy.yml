@@ -109,8 +109,8 @@ jobs:
           ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           ssh-keyscan -H ${{ env.VENUS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          # Setup SSH config with ProxyJump
-          cat >> ~/.ssh/config << 'EOF'
+          # Setup SSH config with ProxyJump (overwrite to prevent duplication)
+          cat > ~/.ssh/config << 'EOF'
           Host ec2-bastion
             HostName ${{ env.EC2_HOST }}
             User ${{ env.EC2_USER }}
@@ -177,6 +177,17 @@ jobs:
       # ============================================================
       # Cleanup Phase (Always runs if EC2 was started)
       # ============================================================
+      - name: Cleanup data on EC2
+        if: always() && steps.start-ec2.outputs.started == 'true'
+        run: |
+          echo "Cleaning up sensitive data on EC2 bastion..."
+          ssh ec2-bastion << 'EOF'
+            # Remove temporary deployment files
+            rm -f ${{ env.EC2_TMP_FILE }} 2>/dev/null || true
+
+            echo "Cleanup completed on EC2"
+          EOF
+
       - name: Stop EC2 instance
         if: always() && steps.start-ec2.outputs.started == 'true'
         uses: ./.github/actions/ec2-stop
