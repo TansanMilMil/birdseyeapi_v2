@@ -105,9 +105,8 @@ jobs:
           echo "${{ secrets.VENUS_SSH_KEY }}" > ${{ env.VENUS_SSH_KEY_PATH }}
           chmod 600 ${{ env.EC2_SSH_KEY_PATH }} ${{ env.VENUS_SSH_KEY_PATH }}
 
-          # Setup known_hosts for security
+          # Setup known_hosts for EC2 (direct connection)
           ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh-keyscan -H ${{ env.VENUS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
           # Setup SSH config with ProxyJump (overwrite to prevent duplication)
           cat > ~/.ssh/config << 'EOF'
@@ -125,6 +124,8 @@ jobs:
             ProxyJump ec2-bastion
             ServerAliveInterval 60
             ConnectTimeout 10
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
           EOF
 
       - name: Transfer package to Venus via ProxyJump
