@@ -9,5 +9,9 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }

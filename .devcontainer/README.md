@@ -55,3 +55,11 @@ go run go/main.go
 
 `.env`ファイルを作成して必要な環境変数を設定してください。
 `.env.example`を参考にしてください。
+
+## Claude Code の利用
+
+DevContainer 内でターミナルから `claude` コマンドが使えます。
+
+- ホストの `~/.claude/` を `/home/vscode/.claude/` に bind mount しているため、ホストと同じ設定・メモリ・スキルが引き継がれます。
+- 認証はブラウザ経由のため `ANTHROPIC_API_KEY` は不要です。ホストでのログイン済みセッション情報が `~/.claude/` のマウント経由で引き継がれます。
+- Claude Code 本体は `postCreateCommand` で `curl -fsSL https://claude.ai/install.sh | bash` によりインストールされます。

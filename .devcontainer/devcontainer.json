@@ -1,6 +1,8 @@
 {
   "name": "BirdseyeAPI v2 Dev Environment",
-  "image": "mcr.microsoft.com/devcontainers/go:1.22",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
 
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
@@ -46,7 +48,7 @@
 
   "forwardPorts": [8080, 1111, 3307, 4444, 3000],
 
-  "postCreateCommand": "sh -c 'sudo curl -sL https://taskfile.dev/install.sh | sudo sh -s -- -b /usr/local/bin && go mod download'",
+  "postCreateCommand": "sh -c 'sudo curl -sL https://taskfile.dev/install.sh | sudo sh -s -- -b /usr/local/bin && go mod download && curl -fsSL https://claude.ai/install.sh | bash'",
 
   "remoteEnv": {
     "BIRDSEYEAPI_V2_OPENAI_API_KEY": "${localEnv:BIRDSEYEAPI_V2_OPENAI_API_KEY}",
@@ -58,7 +60,7 @@
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.npmrc,target=/home/vscode/.npmrc,type=bind,consistency=cached"
   ],
 
   "remoteUser": "vscode",
