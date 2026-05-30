@@ -9,11 +9,54 @@ import (
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/env"
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/models"
 	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/firefox"
 )
 
 const SOURCE_URL = "https://b.hatena.ne.jp/entry/s/"
 
+const (
+	// pageLoadTimeout bounds how long a single navigation may hang. Without
+	// this a stuck page keeps the session (and its Firefox memory) alive
+	// indefinitely, which is what drove the host OOM.
+	pageLoadTimeout = 30 * time.Second
+	// implicitWait is the per-element lookup timeout.
+	implicitWait = 5 * time.Second
+)
+
 var SeleniumUrl = env.GetEnv("SELENIUM_URL", "")
+
+// NewFirefoxDriver creates a single remote Firefox session with headless mode
+// and timeouts configured. The caller owns the returned driver's lifecycle and
+// must call driver.Quit() (checking the error) when done. Reusing one driver
+// across many articles avoids repeatedly spawning/leaking Firefox processes.
+func NewFirefoxDriver() (selenium.WebDriver, error) {
+	remoteURL, err := url.Parse(SeleniumUrl)
+	if err != nil {
+		return nil, fmt.Errorf("invalid selenium URL: %v", err)
+	}
+
+	caps := selenium.Capabilities{"browserName": "firefox"}
+	caps.AddFirefox(firefox.Capabilities{
+		Args: []string{"-headless"},
+	})
+
+	driver, err := selenium.NewRemote(caps, remoteURL.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create selenium session: %v", err)
+	}
+
+	if err := driver.SetPageLoadTimeout(pageLoadTimeout); err != nil {
+		// Best effort: log via the returned error path by quitting and failing.
+		_ = driver.Quit()
+		return nil, fmt.Errorf("failed to set page load timeout: %v", err)
+	}
+	if err := driver.SetImplicitWaitTimeout(implicitWait); err != nil {
+		_ = driver.Quit()
+		return nil, fmt.Errorf("failed to set implicit wait timeout: %v", err)
+	}
+
+	return driver, nil
+}
 
 type ScrapeReactionsByHatena struct{}
 
@@ -25,21 +68,8 @@ func (s *ScrapeReactionsByHatena) GetSourceBy() string {
 	return "Hatena"
 }
 
-func (s *ScrapeReactionsByHatena) ExtractReactions(newsId uint, articleURL string, title string) ([]models.NewsReaction, error) {
+func (s *ScrapeReactionsByHatena) ExtractReactions(driver selenium.WebDriver, newsId uint, articleURL string, title string) ([]models.NewsReaction, error) {
 	var reactions []models.NewsReaction
-
-	// If SeleniumUrl is specified, use remote driver instead
-	remoteURL, err := url.Parse(SeleniumUrl)
-	if err != nil {
-		return nil, fmt.Errorf("invalid selenium URL: %v", err)
-	}
-
-	caps := selenium.Capabilities{"browserName": "firefox"}
-	driver, err := selenium.NewRemote(caps, remoteURL.String())
-	if err != nil {
-		panic(err)
-	}
-	defer driver.Quit()
 
 	// Clean the URL (remove protocol)
 	cleanURL := articleURL
@@ -47,8 +77,7 @@ func (s *ScrapeReactionsByHatena) ExtractReactions(newsId uint, articleURL strin
 	cleanURL = strings.Replace(cleanURL, "https://", "", 1)
 	hatenaURL := SOURCE_URL + cleanURL
 
-	err = driver.Get(hatenaURL)
-	if err != nil {
+	if err := driver.Get(hatenaURL); err != nil {
 		return nil, fmt.Errorf("failed to navigate to URL: %v", err)
 	}
 

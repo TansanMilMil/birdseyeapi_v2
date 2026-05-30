@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/birdseyeapi/birdseyeapi_v2/go/src/cache"
@@ -23,6 +24,10 @@ type NewsHandler struct {
 	db           *gorm.DB
 	newsRepo     NewsRepositoryInterface
 	reactionRepo *repo.NewsReactionRepository
+	// scraping ensures only one scrape run executes at a time. Concurrent runs
+	// would open multiple Selenium sessions simultaneously and spike memory,
+	// which is what triggered the host OOM.
+	scraping sync.Mutex
 }
 
 func NewNewsHandler(db *gorm.DB) *NewsHandler {
@@ -86,9 +91,26 @@ func (h *NewsHandler) GetNewsReactionsById(c *gin.Context) {
 }
 
 func (h *NewsHandler) Scrape(c *gin.Context) {
+	// Reject overlapping runs instead of queueing them: a second concurrent
+	// scrape would double the live Selenium sessions and memory footprint.
+	if !h.scraping.TryLock() {
+		c.JSON(http.StatusConflict, gin.H{
+			"success": false,
+			"message": "News scraping is already running",
+		})
+		return
+	}
+
 	scraper := scraping.NewSiteScraping()
 
 	go func() {
+		defer h.scraping.Unlock()
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("recovered from panic during scraping: %v", r)
+			}
+		}()
+
 		news := h.scrapeNews(scraper)
 
 		h.scrapeReactions(news, scraper)
@@ -115,8 +137,23 @@ func (h *NewsHandler) scrapeNews(scraper *scraping.SiteScraping) []models.News {
 }
 
 func (h *NewsHandler) scrapeReactions(news []models.News, scraper *scraping.SiteScraping) []models.News {
+	// Create a single Selenium session reused across all articles, then close
+	// it deterministically. Per-article sessions repeatedly spawned/leaked
+	// Firefox processes; sharing one and guaranteeing Quit() prevents the
+	// session pile-up that exhausted memory.
+	driver, err := scraper.NewReactionDriver()
+	if err != nil {
+		log.Printf("Error creating selenium driver, skipping reactions: %v", err)
+		return news
+	}
+	defer func() {
+		if err := driver.Quit(); err != nil {
+			log.Printf("Error quitting selenium driver: %v", err)
+		}
+	}()
+
 	for i := range news {
-		reactions, err := scraper.ScrapeReactions(news[i])
+		reactions, err := scraper.ScrapeReactions(driver, news[i])
 		if err != nil {
 			log.Printf("Error scraping reactions: %v", err)
 		}
