@@ -23,7 +23,7 @@ func (n *NewsRepository) GetNews(t time.Time, c *gin.Context) []models.News {
 	var news []models.News
 
 	result := n.db.
-		Where("DATE(created_at) >= DATE(?)", t).
+		Where("created_at >= DATE(?)", t).
 		Limit(100).
 		Preload("Reactions").
 		Find(&news)

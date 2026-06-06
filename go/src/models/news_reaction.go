@@ -9,7 +9,7 @@ import (
 type NewsReaction struct {
 	gorm.Model
 	ID              uint      `gorm:"primarykey"`
-	NewsID          uint      `json:"newsId"`
+	NewsID          uint      `gorm:"index" json:"newsId"`
 	Author          string    `json:"author"`
 	Comment         string    `json:"comment"`
 	ScrapedDateTime time.Time `json:"scrapedDateTime"`

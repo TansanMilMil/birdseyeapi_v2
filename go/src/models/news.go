@@ -10,6 +10,7 @@ type News struct {
 	gorm.Model
 	ID              uint      `gorm:"primarykey"`
 	ScrapingUnitID  uint      `json:"scrapingUnitId"`
+	CreatedAt       time.Time `gorm:"index"`
 	Title           string    `gorm:"size:200" json:"title"`
 	Description     string    `gorm:"type:text" json:"description"`
 	SummarizedText  string    `gorm:"type:text" json:"summarizedText"`
