@@ -43,6 +43,9 @@ services:
       AWS_ACCESS_KEY_ID: "${BIRDSEYEAPI_V2_AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY: "${BIRDSEYEAPI_V2_AWS_SECRET_ACCESS_KEY}"
     entrypoint: ./go-entrypoint.sh
+    depends_on:
+      mysql:
+        condition: service_healthy
     logging:
       driver: json-file
       options:
@@ -83,11 +86,19 @@ services:
     volumes:
       - db-store:/var/lib/mysql
       - ./logs:/var/log/mysql
+      # フレッシュボリューム初回起動時に birds_eye DB を自動作成 (手動 init_db.sh 不要)
+      - ./mysql/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     ports:
       - 3307:3306
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
     logging:
       driver: json-file
       options:

@@ -19,6 +19,12 @@ tasks:
     cmds:
       - docker compose down
 
+  e2e:
+    desc: Run local E2E (boot all containers in PRODUCTION mode and assert health)
+    deps: [build]   # go/dist/birdseyeapi_v2 を保証 (build は test に依存)
+    cmds:
+      - ./scripts/e2e.sh
+
   test:
     desc: Run tests in Docker
     cmds:
