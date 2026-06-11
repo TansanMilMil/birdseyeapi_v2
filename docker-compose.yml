@@ -81,8 +81,8 @@ services:
   mysql:
     image: mysql:9.3
     container_name: birdseyeapi_mysql
-    command: --innodb-buffer-pool-size=128M
-    mem_limit: 512m
+    command: --innodb-buffer-pool-size=256M
+    mem_limit: 1g
     volumes:
       - db-store:/var/lib/mysql
       - ./logs:/var/log/mysql
