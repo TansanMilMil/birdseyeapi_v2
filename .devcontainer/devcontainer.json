@@ -22,9 +22,6 @@
         "golang.go",
         "ms-vscode.vscode-docker",
         "ms-vscode.makefile-tools",
-        "formulahendry.auto-rename-tag",
-        "ms-vscode.vscode-json",
-        "Anthropic.claude-code",
         "task.vscode-task",
         "github.vscode-github-actions",
         "mhutchie.git-graph"
@@ -47,8 +44,15 @@
   },
 
   "forwardPorts": [8080, 1111, 3307, 4444, 3000],
+  "portsAttributes": {
+    "8080": { "label": "Go API Server" },
+    "1111": { "label": "Dev Server" },
+    "3307": { "label": "MySQL" },
+    "4444": { "label": "Debug" },
+    "3000": { "label": "Frontend" }
+  },
 
-  "postCreateCommand": "sh .devcontainer/postCreate.sh",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
 
   "remoteEnv": {
     "BIRDSEYEAPI_V2_OPENAI_API_KEY": "${localEnv:BIRDSEYEAPI_V2_OPENAI_API_KEY}",
@@ -58,9 +62,11 @@
   },
 
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.npmrc,target=/home/vscode/.npmrc,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.vimrc,target=/home/vscode/.vimrc,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
 
