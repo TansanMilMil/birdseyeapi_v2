@@ -6,16 +6,16 @@ This is a Go+Gin implementation of BirdseyeAPI for scraping and managing news so
 
 - REST API for news management
 - Automatic news scraping from multiple sources
-- News summarization using OpenAI
+- News summarization using OpenAI or Anthropic Claude
 - Reaction tracking for news articles
 
 ## Setup
 
 ### Prerequisites
 
-- Go 1.20 or later
+- Go 1.22 or later
 - MySQL database
-- OpenAI API key (for summarization features)
+- OpenAI API key or Anthropic Claude API key (for summarization)
 - Selenium (for reaction scraping)
 
 ### Environment Variables
@@ -40,26 +40,29 @@ MYSQL_ROOT_PASSWORD=your_secure_password
 # Port: 3306
 # DBName: birds_eye
 
-# OpenAI Configuration
-OPENAI_MODEL=gpt-4-turbo
-OPENAI_CHAT_ENDPOINT=https://api.openai.com/v1/chat/completions
+# AI Summarization (set at least one)
+BIRDSEYEAPI_V2_OPENAI_API_KEY=your_openai_api_key
+BIRDSEYEAPI_V2_CLAUDE_API_KEY=your_claude_api_key
 
 # AWS Configuration (for CDN invalidation)
 AWS_REGION=your_aws_region
 AWS_CLOUDFRONT_BIRDSEYEAPIPROXY_DISTRIBUTION_ID=your_distribution_id
+BIRDSEYEAPI_V2_AWS_ACCESS_KEY_ID=your_access_key_id
+BIRDSEYEAPI_V2_AWS_SECRET_ACCESS_KEY=your_secret_access_key
 
 # Application Settings
 GO_API_PORT=8080
-BIRDSEYEAPI_EXECUTION_MODE=production
-SCRAPING_ARTICLES=10
+# PRODUCTION runs the pre-built binary; any other value drops into an interactive shell
+BIRDSEYEAPI_EXECUTION_MODE=PRODUCTION
 
-# Selenium Settings (for reaction scraping with Hatena)
-SELENIUM_URL=http://selenium:4444/wd/hub
+# Grafana (observability dashboard)
+BIRDSEYEAPI_V2_GRAFANA_ADMIN_PASSWORD=your_grafana_password
 
-# Deployment Settings (used by deploy.sh)
+# Deployment Settings (used by scrape.sh for remote scrape triggering)
 # VENUS_SSH_HOST=your_host
-# VENUS_HOME=/path/to/deployment
 ```
+
+> **Note:** `OPENAI_MODEL`, `OPENAI_CHAT_ENDPOINT`, and `SELENIUM_URL` are not configurable via environment variables. The OpenAI model (`gpt-4.1-mini`) and endpoint, the Claude model (`claude-3-5-sonnet-20241022`) and endpoint, and the Selenium URL (`http://selenium:4444/wd/hub`) are all hardcoded in the source. `SELENIUM_URL` is set automatically by Docker Compose and does not need to be set manually.
 
 ### Build and Run
 
@@ -70,66 +73,88 @@ SELENIUM_URL=http://selenium:4444/wd/hub
 go mod download
 
 # Run the application
+./run.sh
+# or directly:
 go run ./go/src/main.go
 ```
 
 #### Using Docker Compose (Recommended)
 
+The Go container is started automatically by `go-entrypoint.sh`. When `BIRDSEYEAPI_EXECUTION_MODE=PRODUCTION`, it runs the pre-built binary at `go/dist/birdseyeapi_v2`; otherwise it drops into an interactive shell for development.
+
 ```bash
-# Start all services (MySQL, Go, Nginx, Selenium)
+# Start all services
 docker compose up -d
 
-# Run the application inside the container
-docker compose exec go go run ./go/src/main.go
-
-# Or use the convenience script
-./run.sh
+# View logs
+docker compose logs -f go
 ```
 
 #### Building for Production
 
 ```bash
-# Build the binary
+# Build the binary (output: go/dist/birdseyeapi_v2)
 ./build.sh
-
-# Deploy to server
-./deploy.sh
 ```
+
+After building, restart the Go container to pick up the new binary:
+
+```bash
+docker compose restart go
+```
+
+#### Triggering a Remote Scrape
+
+`scrape.sh` SSHes into the configured host and calls the scrape endpoint:
+
+```bash
+./scrape.sh
+```
+
+This requires `VENUS_SSH_HOST` to be set in `.env`.
 
 ## API Endpoints
 
 ### News
 
-- `GET /news/today-news`: Get all news articles for today
-- `GET /news/news-reactions/:news-id`: Get reactions for a specific news article
-- `POST /news/scrape`: Trigger news scraping
-- `GET /news/trends`: Get trending topics from Google Trends
+- `GET /news/today-news` — Get news articles for today (falls back up to 10 days if today has none)
+- `GET /news/news-reactions/:news-id` — Get Hatena Bookmark reactions for a specific article
+- `POST /news/scrape` — Trigger news and reaction scraping (runs in background; returns 409 if already running)
+- `GET /news/trends` — Get trending topics from Google Trends
 
 ## Data Sources
 
-The API scrapes news from the following sources:
+The API scrapes news from the following sources (up to 15 articles each):
 
 - CloudWatch by Impress
-- Hatena
-- Zenn
+- Hatena Bookmark hot entries (IT)
+- Zenn (daily tech articles)
 - ZDNet Japan
 
-News articles are automatically summarized using the OpenAI API. The summary is limited to 200 characters in Japanese with proper line breaks for readability.
+News articles are automatically summarized using the OpenAI API (`gpt-4.1-mini`) by default. The summary is limited to 200 characters in Japanese with appropriate line breaks. A Claude (`claude-3-5-sonnet-20241022`) summarizer is also available in the codebase.
 
 ## Reaction Scraping
 
-The system also scrapes reactions (comments) for news articles from:
+The system scrapes reactions for news articles from:
 
-- Hatena Bookmark comments
+- Hatena Bookmark comments (via Selenium/Firefox)
+
+Scraping is serialized: concurrent `POST /news/scrape` requests are rejected with HTTP 409 to prevent multiple Selenium sessions from running simultaneously.
 
 ## Technical Architecture
 
-- **Frontend Proxy**: Nginx serves as a reverse proxy on port 1111
-- **API Server**: Go+Gin running on port 8080
-- **Database**: MySQL 8.4 for data persistence
-- **Selenium**: Firefox headless browser for scraping reactions
-- **CDN Invalidation**: AWS CloudFront integration for cache management
+| Component | Image | Port (host:container) | Role |
+|---|---|---|---|
+| Nginx | nginx:1.31.2 | 1111:1111 | Reverse proxy, rate limiting |
+| Go API | golang:1.24 | 8080:8080 | Application server |
+| MySQL | mysql:9.3 | 3307:3306 | Data persistence |
+| Selenium | selenium/standalone-firefox:133.0 | 4444:4444 | Headless Firefox for reaction scraping |
+| Loki | grafana/loki:3.3.2 | 3100:3100 | Log aggregation |
+| Promtail | grafana/promtail:3.3.2 | — | Log shipping to Loki |
+| Grafana | grafana/grafana:11.4.0 | 3000:3000 | Log and metrics dashboard |
+
+The MySQL database (`birds_eye`) is created automatically on first boot via `mysql/create_db.sql`.
 
 ## Health Check
 
-A health check endpoint is available at `/HealthCheck` that returns HTTP 200 with 'ok' message.
+The `/HealthCheck` endpoint is handled directly by Nginx (not the Go application) and returns HTTP 200 with `ok`.
